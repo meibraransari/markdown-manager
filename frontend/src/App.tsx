@@ -5,6 +5,7 @@ import { useAppStore } from './stores/appStore';
 
 function App() {
   const theme = useAppStore(state => state.theme);
+  const customCss = useAppStore(state => state.customCss);
 
   useEffect(() => {
     document.documentElement.classList.remove(
@@ -19,11 +20,14 @@ function App() {
   }, [theme]);
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/*" element={<Workspace />} />
-      </Routes>
-    </BrowserRouter>
+    <>
+      {customCss && <style id="custom-css-injector">{customCss}</style>}
+      <BrowserRouter>
+        <Routes>
+          <Route path="/*" element={<Workspace />} />
+        </Routes>
+      </BrowserRouter>
+    </>
   );
 }
 

@@ -24,6 +24,10 @@ interface AppState {
   isGraphOpen: boolean;
   showHiddenFiles: boolean;
   openFiles: string[];
+  customCss: string;
+  templateFolder: string;
+  isSettingsOpen: boolean;
+  isTasksOpen: boolean;
   
   setFileTree: (tree: FileNode[]) => void;
   setCurrentFile: (path: string, content: string) => void;
@@ -45,6 +49,10 @@ interface AppState {
   toggleHiddenFiles: () => void;
   addOpenFile: (path: string) => void;
   closeOpenFile: (path: string) => void;
+  setCustomCss: (css: string) => void;
+  setTemplateFolder: (folder: string) => void;
+  setSettingsOpen: (isOpen: boolean) => void;
+  setTasksOpen: (isOpen: boolean) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -68,6 +76,10 @@ export const useAppStore = create<AppState>((set) => ({
   isGraphOpen: false,
   showHiddenFiles: false,
   openFiles: [],
+  customCss: localStorage.getItem('markdown-manager-custom-css') || '',
+  templateFolder: localStorage.getItem('markdown-manager-template-folder') || 'Templates',
+  isSettingsOpen: false,
+  isTasksOpen: false,
 
   setFileTree: (tree) => set({ fileTree: tree }),
   
@@ -134,7 +146,17 @@ export const useAppStore = create<AppState>((set) => ({
     return state;
   }),
   
-  closeOpenFile: (path: string) => set((state) => {
-    return { openFiles: state.openFiles.filter(p => p !== path) };
-  })
+  closeOpenFile: (path: string) => set((state) => ({
+    openFiles: state.openFiles.filter(p => p !== path)
+  })),
+  setCustomCss: (css: string) => {
+    localStorage.setItem('markdown-manager-custom-css', css);
+    set({ customCss: css });
+  },
+  setTemplateFolder: (folder: string) => {
+    localStorage.setItem('markdown-manager-template-folder', folder);
+    set({ templateFolder: folder });
+  },
+  setSettingsOpen: (isOpen: boolean) => set({ isSettingsOpen: isOpen }),
+  setTasksOpen: (isOpen: boolean) => set({ isTasksOpen: isOpen }),
 }));

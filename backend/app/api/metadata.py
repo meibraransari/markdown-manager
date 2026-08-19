@@ -18,3 +18,7 @@ def get_backlinks(path: str = Path(...)):
     decoded_path = urllib.parse.unquote(path)
     backlinks = parser_service.scan_workspace()["backlinks"]
     return {"backlinks": backlinks.get(decoded_path, [])}
+
+@router.get("/metadata/tasks")
+def get_tasks():
+    return parser_service.scan_workspace()["tasks"]

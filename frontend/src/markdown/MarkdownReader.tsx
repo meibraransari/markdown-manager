@@ -8,9 +8,11 @@ import rehypeKatex from 'rehype-katex';
 import mermaid from 'mermaid';
 import 'highlight.js/styles/github-dark.css';
 import 'katex/dist/katex.min.css';
+import remarkFrontmatter from 'remark-frontmatter';
 import { useAppStore } from '../stores/appStore';
 import { useNavigate } from 'react-router-dom';
 import { BacklinksPanel } from '../components/BacklinksPanel';
+import { PropertiesPanel } from '../components/PropertiesPanel';
 
 interface Props {
   content: string;
@@ -38,13 +40,15 @@ export const MarkdownReader: React.FC<Props> = ({ content }) => {
   }, [content]);
 
   return (
-    <div 
-      ref={containerRef} 
-      className="max-w-4xl mx-auto p-8 w-full prose transition-all duration-200"
-      style={{ fontSize: `${zoomLevel}%` }}
-    >
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkMath]}
+    <div className="flex flex-col h-full overflow-y-auto">
+      <PropertiesPanel />
+      <div 
+        ref={containerRef} 
+        className="max-w-4xl mx-auto px-8 pb-8 pt-4 w-full prose transition-all duration-200"
+        style={{ fontSize: `${zoomLevel}%` }}
+      >
+        <ReactMarkdown
+          remarkPlugins={[remarkFrontmatter, remarkGfm, remarkMath]}
         rehypePlugins={[rehypeHighlight, rehypeSanitize, rehypeKatex]}
         components={{
           a: ({ node, href, children, ...props }) => {
@@ -87,7 +91,7 @@ export const MarkdownReader: React.FC<Props> = ({ content }) => {
       >
         {processedContent}
       </ReactMarkdown>
-      
+      </div>
       <BacklinksPanel />
     </div>
   );

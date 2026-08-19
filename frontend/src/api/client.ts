@@ -90,5 +90,13 @@ export const api = {
   getGitLog: async (): Promise<any[]> => {
     const response = await apiClient.get('/git/log');
     return response.data.commits;
+  },
+  createDailyNote: async (templateFolder: string): Promise<string> => {
+    const response = await apiClient.post('/daily', { templateFolder });
+    return response.data.path;
+  },
+  getTasks: async (): Promise<any[]> => {
+    const response = await apiClient.get('/metadata/tasks');
+    return response.data;
   }
 };

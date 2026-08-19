@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppStore } from '../stores/appStore';
 import { api } from '../api/client';
-import { Save, BookOpen, Edit3, ChevronRight, ZoomIn, ZoomOut, Copy, Lock, Unlock, ArrowLeft, ArrowRight, Printer, Info, RefreshCw, Home, ChevronDown, Download, Share2 } from 'lucide-react';
+import { Save, BookOpen, Edit3, ChevronRight, ZoomIn, ZoomOut, Copy, Lock, Unlock, ArrowLeft, ArrowRight, Printer, Info, RefreshCw, Home, ChevronDown, Download, Share2, CheckSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 
@@ -24,8 +24,8 @@ export const Toolbar: React.FC = () => {
     autoSave,
     toggleAutoSave,
     setInfoOpen,
-    isGraphOpen,
-    setGraphOpen
+    isGraphOpen, setGraphOpen,
+    isTasksOpen, setTasksOpen
   } = useAppStore();
 
   const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
@@ -317,6 +317,14 @@ export const Toolbar: React.FC = () => {
               title="Export HTML"
             >
               <Download size={18} />
+            </button>
+            
+            <button 
+              onClick={() => setTasksOpen(!isTasksOpen)}
+              className={`p-1.5 rounded transition-colors ${isTasksOpen ? 'bg-accent-green/20 text-accent-green' : 'text-gray-400 hover:text-white hover:bg-dark-700'}`}
+              title="Task Dashboard"
+            >
+              <CheckSquare size={16} />
             </button>
 
             <button 

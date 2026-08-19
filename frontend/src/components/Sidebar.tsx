@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../stores/appStore';
-import { Folder, File, ChevronRight, ChevronDown, FileText, Image as ImageIcon, Trash2, Edit3, Search, X, PanelLeftClose, PanelLeftOpen, Eye, EyeOff, ChevronsDown, ChevronsUp } from 'lucide-react';
+import { Folder, File, ChevronRight, ChevronDown, FileText, Image as ImageIcon, Trash2, Edit3, Search, X, PanelLeftClose, PanelLeftOpen, Eye, EyeOff, ChevronsDown, ChevronsUp, Calendar, Settings } from 'lucide-react';
 import { OutlinePanel } from './OutlinePanel';
 import { TagsPanel } from './TagsPanel';
 import type { FileNode, SearchResult } from '../api/client';
@@ -137,13 +137,23 @@ const FileTreeItem: React.FC<{ node: FileNode; level: number; search: string; ex
 export const Sidebar: React.FC = () => {
   const fileTree = useAppStore(state => state.fileTree);
   const setFileTree = useAppStore(state => state.setFileTree);
-  const { isSidebarOpen, toggleSidebar, isSearchOpen, setSearchOpen, showHiddenFiles, toggleHiddenFiles, searchQuery: globalSearchQuery, setSearchQuery: setGlobalSearchQuery } = useAppStore();
+  const { isSidebarOpen, toggleSidebar, isSearchOpen, setSearchOpen, showHiddenFiles, toggleHiddenFiles, searchQuery: globalSearchQuery, setSearchQuery: setGlobalSearchQuery, setSettingsOpen, templateFolder } = useAppStore();
   const [search, setSearch] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [expandSignal, setExpandSignal] = useState(0);
   const [collapseSignal, setCollapseSignal] = useState(0);
   const navigate = useNavigate();
+
+  const handleDailyNote = async () => {
+    try {
+      const path = await api.createDailyNote(templateFolder);
+      navigate(`/${path.split('/').map(encodeURIComponent).join('/')}`);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to create daily note.");
+    }
+  };
 
   if (!isSidebarOpen) {
     return (
@@ -258,6 +268,12 @@ export const Sidebar: React.FC = () => {
             </button>
             <button onClick={handleCreateFolder} className="flex-1 flex justify-center py-1.5 text-gray-400 hover:text-accent-purple bg-dark-900 hover:bg-dark-700 rounded transition-colors" title="New Folder">
               <Folder size={16} />
+            </button>
+            <button onClick={handleDailyNote} className="flex-1 flex justify-center py-1.5 text-gray-400 hover:text-accent-pink bg-dark-900 hover:bg-dark-700 rounded transition-colors" title="Today's Daily Note">
+              <Calendar size={16} />
+            </button>
+            <button onClick={() => setSettingsOpen(true)} className="flex-1 flex justify-center py-1.5 text-gray-400 hover:text-gray-200 bg-dark-900 hover:bg-dark-700 rounded transition-colors" title="Settings">
+              <Settings size={16} />
             </button>
           </div>
           <div className="flex items-center space-x-1 mt-2">

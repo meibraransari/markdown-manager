@@ -14,6 +14,7 @@ class ParserService:
     def scan_workspace(self):
         nodes = []
         links = []
+        tasks = []
         tags: Dict[str, List[str]] = {}
         backlinks: Dict[str, List[str]] = {}
 
@@ -55,6 +56,19 @@ class ParserService:
                         tags[tag_lower] = []
                     tags[tag_lower].append(rel_path)
 
+                lines = content.split('\n')
+                for line in lines:
+                    line = line.strip()
+                    if line.startswith('- [ ] ') or line.startswith('- [x] ') or line.startswith('- [X] '):
+                        completed = '[x]' in line.lower()
+                        text = line[5:].strip()
+                        if text:
+                            tasks.append({
+                                "file": rel_path,
+                                "text": text,
+                                "completed": completed
+                            })
+
             except Exception as e:
                 print(f"Error parsing {path}: {e}")
 
@@ -64,7 +78,8 @@ class ParserService:
                 "links": links
             },
             "tags": tags,
-            "backlinks": backlinks
+            "backlinks": backlinks,
+            "tasks": tasks
         }
 
 parser_service = ParserService()

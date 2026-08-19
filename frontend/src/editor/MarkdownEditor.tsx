@@ -111,8 +111,83 @@ export const MarkdownEditor: React.FC = () => {
     e.preventDefault();
   };
 
-  const handleEditorDidMount = (editor: any) => {
+  const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
+
+    // Register Slash Command Completion
+    monaco.languages.registerCompletionItemProvider('markdown', {
+      triggerCharacters: ['/'],
+      provideCompletionItems: (model: any, position: any) => {
+        const textUntilPosition = model.getValueInRange({
+          startLineNumber: position.lineNumber,
+          startColumn: 1,
+          endLineNumber: position.lineNumber,
+          endColumn: position.column
+        });
+        
+        const match = textUntilPosition.match(/(^|\s)\/$/);
+        if (!match) return { suggestions: [] };
+
+        const range = {
+          startLineNumber: position.lineNumber,
+          endLineNumber: position.lineNumber,
+          startColumn: position.column - 1,
+          endColumn: position.column
+        };
+
+        const suggestions = [
+          {
+            label: 'table',
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: '| Column 1 | Column 2 |\n| -------- | -------- |\n| Text     | Text     |',
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            documentation: 'Insert a basic table',
+            range
+          },
+          {
+            label: 'mermaid',
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: '```mermaid\ngraph TD;\n    A-->B;\n    A-->C;\n    B-->D;\n    C-->D;\n```',
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            documentation: 'Insert a Mermaid diagram',
+            range
+          },
+          {
+            label: 'mathblock',
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: '$$\n$1\n$$',
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            documentation: 'Insert a LaTeX Math Block',
+            range
+          },
+          {
+            label: 'codeblock',
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: '```${1:language}\n$2\n```',
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            documentation: 'Insert a code block',
+            range
+          },
+          {
+            label: 'task',
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: '- [ ] ',
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            documentation: 'Insert a task checkbox',
+            range
+          },
+          {
+            label: 'quote',
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: '> ',
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            documentation: 'Insert a blockquote',
+            range
+          }
+        ];
+        return { suggestions };
+      }
+    });
     
     editor.onDidScrollChange((e: any) => {
       const sync = useAppStore.getState().syncScroll;

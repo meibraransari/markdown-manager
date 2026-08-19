@@ -9,8 +9,40 @@ from app.models.schemas import (
     CreateRequest
 )
 import urllib.parse
+from datetime import datetime
 
 router = APIRouter()
+
+@router.post("/daily")
+async def create_daily_note(request: dict):
+    template_folder = request.get("templateFolder", "Templates")
+    today = datetime.now().strftime("%Y-%m-%d")
+    daily_folder = "Journals"
+    daily_path = f"{daily_folder}/{today}.md"
+    template_path = f"{template_folder}/Daily.md"
+
+    # Ensure Journals folder exists
+    try:
+        fs_service.create_item(daily_folder, is_directory=True)
+    except Exception:
+        pass # Already exists
+
+    try:
+        # Check if daily note exists
+        await fs_service.read_file(daily_path)
+    except HTTPException:
+        # File doesn't exist, create it
+        content = f"---\ndate: {today}\n---\n\n# {today}\n\n"
+        # Try to load template
+        try:
+            template_content, _ = await fs_service.read_file(template_path)
+            content = template_content.replace("{{date}}", today)
+        except Exception:
+            pass # No template found
+            
+        await fs_service.write_file(daily_path, content)
+
+    return {"path": daily_path}
 
 @router.get("/tree", response_model=List[FileNode])
 def get_file_tree(show_hidden: bool = False):

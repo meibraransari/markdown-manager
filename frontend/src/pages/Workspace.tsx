@@ -13,6 +13,8 @@ import { useAppStore } from '../stores/appStore';
 import { api } from '../api/client';
 import { GraphView } from '../components/GraphView';
 import { GitPanel } from '../components/GitPanel';
+import { SettingsModal } from '../components/SettingsModal';
+import { TasksDashboard } from '../components/TasksDashboard';
 
 export const isImage = (path: string) => /\.(png|jpe?g|gif|webp|svg|bmp|ico)$/i.test(path);
 export const isPdf = (path: string) => /\.pdf$/i.test(path);
@@ -239,6 +241,8 @@ export const Workspace: React.FC = () => {
       </div>
       <CommandPalette />
       <GitPanel />
+      <SettingsModal />
+      <TasksDashboard isOpen={useAppStore(state => state.isTasksOpen)} onClose={() => useAppStore.getState().setTasksOpen(false)} />
     </Layout>
   );
 };
