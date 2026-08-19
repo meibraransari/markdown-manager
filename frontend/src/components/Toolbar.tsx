@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAppStore } from '../stores/appStore';
 import { api } from '../api/client';
-import { Save, BookOpen, Edit3, ChevronRight, ZoomIn, ZoomOut, Copy, Lock, Unlock, ArrowLeft, ArrowRight, Sun, Moon } from 'lucide-react';
+import { Save, BookOpen, Edit3, ChevronRight, ZoomIn, ZoomOut, Copy, Lock, Unlock, ArrowLeft, ArrowRight, Sun, Moon, Printer, Info, RefreshCw, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 
@@ -20,7 +20,10 @@ export const Toolbar: React.FC = () => {
     syncScroll,
     toggleSyncScroll,
     isDarkMode,
-    toggleTheme
+    toggleTheme,
+    autoSave,
+    toggleAutoSave,
+    setInfoOpen
   } = useAppStore();
 
   const navigate = useNavigate();
@@ -63,6 +66,13 @@ export const Toolbar: React.FC = () => {
     <div className="h-14 bg-dark-900 border-b border-dark-700 flex items-center justify-between px-4">
       <div className="flex items-center space-x-2 flex-1 overflow-hidden">
         <div className="flex space-x-1 mr-2 bg-dark-800 rounded border border-dark-700 p-0.5">
+          <button 
+            onClick={() => navigate('/')}
+            className="p-1 text-gray-400 hover:text-gray-200 hover:bg-dark-700 rounded transition-colors"
+            title="Go to Home (README.md)"
+          >
+            <Home size={16} />
+          </button>
           <button 
             onClick={() => navigate(-1)}
             className="p-1 text-gray-400 hover:text-gray-200 hover:bg-dark-700 rounded transition-colors"
@@ -137,6 +147,17 @@ export const Toolbar: React.FC = () => {
               >
                 <Save size={18} />
               </button>
+
+              <button 
+                onClick={toggleAutoSave}
+                className={clsx(
+                  "p-2 rounded transition-colors flex items-center justify-center",
+                  autoSave ? "text-accent-pink bg-accent-pink/10" : "text-gray-500 hover:text-gray-300"
+                )}
+                title={autoSave ? "Auto-Save Enabled" : "Auto-Save Disabled"}
+              >
+                <RefreshCw size={18} />
+              </button>
             </div>
             
             <div className="flex bg-dark-800 rounded-lg p-1 border border-dark-700">
@@ -198,6 +219,22 @@ export const Toolbar: React.FC = () => {
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.02c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A4.8 4.8 0 0 0 8 18v4"></path></svg>
             </a>
+
+            <button 
+              onClick={() => window.print()}
+              className="p-1.5 text-gray-400 hover:text-white hover:bg-dark-800 rounded transition-colors"
+              title="Print / Save as PDF"
+            >
+              <Printer size={18} />
+            </button>
+
+            <button 
+              onClick={() => setInfoOpen(true)}
+              className="p-1.5 text-gray-400 hover:text-white hover:bg-dark-800 rounded transition-colors"
+              title="Info & Shortcuts"
+            >
+              <Info size={18} />
+            </button>
 
             <button 
               onClick={toggleTheme}

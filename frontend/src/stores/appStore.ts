@@ -16,6 +16,9 @@ interface AppState {
   syncScroll: boolean;
   isSidebarOpen: boolean;
   isDarkMode: boolean;
+  autoSave: boolean;
+  isInfoOpen: boolean;
+  isSearchOpen: boolean;
   
   setFileTree: (tree: FileNode[]) => void;
   setCurrentFile: (path: string, content: string) => void;
@@ -28,6 +31,9 @@ interface AppState {
   toggleSyncScroll: () => void;
   toggleSidebar: () => void;
   toggleTheme: () => void;
+  toggleAutoSave: () => void;
+  setInfoOpen: (isOpen: boolean) => void;
+  setSearchOpen: (isOpen: boolean) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -43,9 +49,14 @@ export const useAppStore = create<AppState>((set) => ({
   syncScroll: true,
   isSidebarOpen: true,
   isDarkMode: true,
+  autoSave: true,
+  isInfoOpen: false,
+  isSearchOpen: false,
 
   setFileTree: (tree) => set({ fileTree: tree }),
   
+  setSidebarOpen: (isOpen: boolean) => set({ isSidebarOpen: isOpen }),
+
   setCurrentFile: (path, content) => set({ 
     currentFilePath: path, 
     currentContent: content, 
@@ -85,5 +96,9 @@ export const useAppStore = create<AppState>((set) => ({
       document.documentElement.classList.remove('dark');
     }
     return { isDarkMode: newTheme };
-  })
+  }),
+
+  toggleAutoSave: () => set((state) => ({ autoSave: !state.autoSave })),
+  setInfoOpen: (isOpen: boolean) => set({ isInfoOpen: isOpen }),
+  setSearchOpen: (isOpen: boolean) => set({ isSearchOpen: isOpen })
 }));

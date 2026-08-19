@@ -137,6 +137,26 @@ export const MarkdownEditor: React.FC = () => {
         <ToolbarButton icon={CheckSquare} onClick={() => insertLinePrefix('- [ ] ')} title="Task List" />
         <Divider />
         <ToolbarButton icon={Quote} onClick={() => insertLinePrefix('> ')} title="Blockquote" />
+        <ToolbarButton 
+          icon={ListOrdered} 
+          onClick={() => {
+            const toc = ['## Table of Contents', ''];
+            const lines = content.split('\n');
+            lines.forEach(line => {
+              const match = line.match(/^(#{1,6})\s+(.+)$/);
+              if (match) {
+                const level = match[1].length;
+                const title = match[2];
+                const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                const indent = '  '.repeat(level - 1);
+                toc.push(`${indent}- [${title}](#${slug})`);
+              }
+            });
+            insertFormatting(toc.join('\n') + '\n\n');
+          }} 
+          title="Table of Contents" 
+        />
+        <Divider />
         <ToolbarButton icon={Link} onClick={() => insertFormatting('[', '](url)')} title="Link" />
         <ToolbarButton icon={ImageIcon} onClick={() => insertFormatting('![', '](image-url)')} title="Image" />
         <ToolbarButton icon={Code} onClick={() => insertFormatting('`', '`')} title="Inline Code" />

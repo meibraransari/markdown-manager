@@ -114,3 +114,43 @@
 .prose img {
   @apply max-w-full h-auto rounded-lg mb-4 border border-dark-700;
 }
+
+@media print {
+  /* Hide all UI chrome */
+  #sidebar, #toolbar, #statusbar, .editor-pane, .resizer, .info-modal {
+    display: none !important;
+  }
+
+  /* Reset layout constraints for printing long documents */
+  *, *::before, *::after {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    position: static !important;
+    box-shadow: none !important;
+  }
+
+  body, html, #root, .flex {
+    display: block !important;
+  }
+
+  /* Force the preview pane to take full width and hide background */
+  #preview-pane {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    color: black !important;
+  }
+  
+  /* Milkdown text overrides for print */
+  .milkdown {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .milkdown * {
+    color: black !important;
+  }
+}

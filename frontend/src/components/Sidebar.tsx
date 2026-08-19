@@ -121,15 +121,12 @@ const FileTreeItem: React.FC<{ node: FileNode; level: number; search: string }> 
 export const Sidebar: React.FC = () => {
   const fileTree = useAppStore(state => state.fileTree);
   const setFileTree = useAppStore(state => state.setFileTree);
+  const { isSidebarOpen, toggleSidebar, isSearchOpen, setSearchOpen } = useAppStore();
   const [search, setSearch] = useState('');
-  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [globalSearchQuery, setGlobalSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
-
-  const isSidebarOpen = useAppStore(state => state.isSidebarOpen);
-  const toggleSidebar = useAppStore(state => state.toggleSidebar);
 
   if (!isSidebarOpen) {
     return (
@@ -226,7 +223,7 @@ export const Sidebar: React.FC = () => {
             </button>
           </div>
           <div className="flex items-center space-x-1">
-            <button onClick={() => setIsSearchModalOpen(true)} className="flex-1 flex justify-center py-1.5 text-gray-400 hover:text-white bg-dark-900 hover:bg-dark-700 rounded transition-colors" title="Global Search">
+            <button onClick={() => setSearchOpen(true)} className="flex-1 flex justify-center py-1.5 text-gray-400 hover:text-white bg-dark-900 hover:bg-dark-700 rounded transition-colors" title="Global Search">
               <Search size={16} />
             </button>
             <button onClick={handleCreateFile} className="flex-1 flex justify-center py-1.5 text-gray-400 hover:text-accent-neon bg-dark-900 hover:bg-dark-700 rounded transition-colors" title="New File">
@@ -266,8 +263,8 @@ export const Sidebar: React.FC = () => {
         </div>
       </div>
 
-      {isSearchModalOpen && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center pt-24" onClick={() => setIsSearchModalOpen(false)}>
+      {isSearchOpen && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center pt-24" onClick={() => setSearchOpen(false)}>
           <div className="bg-dark-800 border border-dark-700 rounded-lg w-full max-w-2xl shadow-2xl flex flex-col max-h-[80vh]" onClick={e => e.stopPropagation()}>
             <form onSubmit={handleGlobalSearch} className="p-4 border-b border-dark-700 flex space-x-2">
               <div className="relative flex-1">
@@ -306,7 +303,7 @@ export const Sidebar: React.FC = () => {
                   className="mb-4 p-3 bg-dark-900/50 rounded border border-dark-700 hover:border-dark-600 cursor-pointer transition-colors"
                   onClick={() => {
                     navigate(`/${result.path.split('/').map(encodeURIComponent).join('/')}`);
-                    setIsSearchModalOpen(false);
+                    setSearchOpen(false);
                   }}
                 >
                   <div className="text-accent-neon font-medium text-sm mb-1">{result.path} {result.line_number && `(Line ${result.line_number})`}</div>
