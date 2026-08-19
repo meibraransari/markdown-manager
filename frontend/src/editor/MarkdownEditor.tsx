@@ -12,7 +12,7 @@ export const MarkdownEditor: React.FC = () => {
   const content = useAppStore(state => state.currentContent);
   const updateContent = useAppStore(state => state.updateContent);
   const zoomLevel = useAppStore(state => state.zoomLevel);
-  const isDarkMode = useAppStore(state => state.isDarkMode);
+  const theme = useAppStore(state => state.theme);
   const editorRef = useRef<any>(null);
 
   useEffect(() => {
@@ -171,7 +171,7 @@ export const MarkdownEditor: React.FC = () => {
         <Editor
           height="100%"
           defaultLanguage="markdown"
-          theme={isDarkMode ? 'vs-dark' : 'light'}
+          theme={theme === 'theme-light' ? 'light' : 'vs-dark'}
           value={content}
           onChange={(val) => updateContent(val || '')}
           onMount={handleEditorDidMount}

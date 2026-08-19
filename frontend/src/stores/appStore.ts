@@ -15,7 +15,7 @@ interface AppState {
   zoomLevel: number;
   syncScroll: boolean;
   isSidebarOpen: boolean;
-  isDarkMode: boolean;
+  theme: string;
   autoSave: boolean;
   isInfoOpen: boolean;
   isSearchOpen: boolean;
@@ -31,7 +31,7 @@ interface AppState {
   setZoomLevel: (zoom: number) => void;
   toggleSyncScroll: () => void;
   toggleSidebar: () => void;
-  toggleTheme: () => void;
+  setTheme: (theme: string) => void;
   toggleAutoSave: () => void;
   setInfoOpen: (isOpen: boolean) => void;
   setSearchOpen: (isOpen: boolean) => void;
@@ -91,14 +91,19 @@ export const useAppStore = create<AppState>((set) => ({
   
   toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
 
-  toggleTheme: () => set((state) => {
-    const newTheme = !state.isDarkMode;
-    if (newTheme) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+  theme: 'theme-dark',
+  setTheme: (theme: string) => set(() => {
+    // Remove all previous theme classes
+    document.documentElement.classList.remove(
+      'dark', 'theme-dark', 'theme-light', 'theme-obsidian', 
+      'theme-dracula', 'theme-nord', 'theme-monokai', 
+      'theme-github-dark', 'theme-solarized-dark', 
+      'theme-gruvbox', 'theme-onedark'
+    );
+    if (theme !== 'theme-light') {
+      document.documentElement.classList.add(theme);
     }
-    return { isDarkMode: newTheme };
+    return { theme };
   }),
 
   toggleAutoSave: () => set((state) => ({ autoSave: !state.autoSave })),

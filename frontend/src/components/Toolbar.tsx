@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAppStore } from '../stores/appStore';
 import { api } from '../api/client';
-import { Save, BookOpen, Edit3, ChevronRight, ZoomIn, ZoomOut, Copy, Lock, Unlock, ArrowLeft, ArrowRight, Sun, Moon, Printer, Info, RefreshCw, Home } from 'lucide-react';
+import { Save, BookOpen, Edit3, ChevronRight, ZoomIn, ZoomOut, Copy, Lock, Unlock, ArrowLeft, ArrowRight, Printer, Info, RefreshCw, Home, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 
@@ -19,12 +19,38 @@ export const Toolbar: React.FC = () => {
     setZoomLevel,
     syncScroll,
     toggleSyncScroll,
-    isDarkMode,
-    toggleTheme,
+    theme,
+    setTheme,
     autoSave,
     toggleAutoSave,
     setInfoOpen
   } = useAppStore();
+
+  const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
+  const themeDropdownRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (themeDropdownRef.current && !themeDropdownRef.current.contains(event.target as Node)) {
+        setIsThemeDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const themeOptions = [
+    { value: 'theme-dark', label: 'Dark (Default)' },
+    { value: 'theme-light', label: 'Light' },
+    { value: 'theme-obsidian', label: 'Obsidian' },
+    { value: 'theme-dracula', label: 'Dracula' },
+    { value: 'theme-nord', label: 'Nord' },
+    { value: 'theme-monokai', label: 'Monokai' },
+    { value: 'theme-github-dark', label: 'GitHub Dark' },
+    { value: 'theme-solarized-dark', label: 'Solarized Dark' },
+    { value: 'theme-gruvbox', label: 'Gruvbox' },
+    { value: 'theme-onedark', label: 'One Dark' }
+  ];
 
   const navigate = useNavigate();
 
@@ -236,13 +262,38 @@ export const Toolbar: React.FC = () => {
               <Info size={18} />
             </button>
 
-            <button 
-              onClick={toggleTheme}
-              className="p-1.5 text-gray-400 hover:text-white hover:bg-dark-800 rounded transition-colors"
-              title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            >
-              {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
+            <div className="relative flex items-center" ref={themeDropdownRef}>
+              <button
+                onClick={() => setIsThemeDropdownOpen(!isThemeDropdownOpen)}
+                className="flex items-center justify-between w-36 bg-dark-800 border border-dark-600 text-gray-300 text-xs rounded px-2 py-1.5 focus:outline-none focus:border-accent-purple hover:bg-dark-700 transition-colors shadow-sm"
+                title="Select Theme"
+              >
+                <span className="truncate">{themeOptions.find(t => t.value === theme)?.label || 'Theme'}</span>
+                <ChevronDown size={14} className={clsx("transition-transform duration-200", isThemeDropdownOpen && "rotate-180")} />
+              </button>
+
+              {isThemeDropdownOpen && (
+                <div className="absolute right-0 top-full mt-1 w-40 bg-dark-800 border border-dark-600 rounded-lg shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="py-1 max-h-64 overflow-y-auto">
+                    {themeOptions.map((t) => (
+                      <button
+                        key={t.value}
+                        onClick={() => {
+                          setTheme(t.value);
+                          setIsThemeDropdownOpen(false);
+                        }}
+                        className={clsx(
+                          "w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-dark-700",
+                          theme === t.value ? "text-accent-neon font-medium bg-dark-700/50" : "text-gray-300"
+                        )}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </>
         )}
       </div>
