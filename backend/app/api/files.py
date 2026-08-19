@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Path
+from fastapi import APIRouter, HTTPException, Path, File, UploadFile
 from typing import List
 from app.services.filesystem import fs_service
 from app.models.schemas import (
@@ -34,6 +34,14 @@ def create_item(request: CreateRequest, path: str = Path(...)):
     decoded_path = urllib.parse.unquote(path)
     fs_service.create_item(decoded_path, is_directory=request.is_directory, content=request.content)
     return {"message": "Created successfully"}
+
+@router.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No filename provided")
+    file_bytes = await file.read()
+    path = await fs_service.save_asset(file.filename, file_bytes)
+    return {"path": path}
 
 @router.delete("/files/{path:path}")
 def delete_item(path: str = Path(...)):

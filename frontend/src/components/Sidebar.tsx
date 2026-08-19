@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../stores/appStore';
 import { Folder, File, ChevronRight, ChevronDown, FileText, Image as ImageIcon, Trash2, Edit3, Search, X, PanelLeftClose, PanelLeftOpen, Eye, EyeOff, ChevronsDown, ChevronsUp } from 'lucide-react';
+import { OutlinePanel } from './OutlinePanel';
 import type { FileNode, SearchResult } from '../api/client';
 import { api } from '../api/client';
 import { clsx } from 'clsx';
@@ -306,11 +307,12 @@ export const Sidebar: React.FC = () => {
                 collapseSignal={collapseSignal}
               />
             ))
-          ) : (
-            <div className="text-center text-sm text-gray-500 mt-4">No files match "{search}"</div>
-          )}
+            ) : (
+              <div className="text-center text-sm text-gray-500 mt-4">No files match "{search}"</div>
+            )}
+          </div>
+          <OutlinePanel />
         </div>
-      </div>
 
       {isSearchOpen && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center pt-24" onClick={() => setSearchOpen(false)}>

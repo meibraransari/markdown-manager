@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useAppStore } from '../stores/appStore';
+import { api } from '../api/client';
 import Editor from '@monaco-editor/react';
 import { 
   Bold, Italic, Strikethrough, 
@@ -27,6 +28,88 @@ export const MarkdownEditor: React.FC = () => {
       delete (window as any).scrollToEditorPercentage;
     };
   }, []);
+
+  const isVimMode = useAppStore(state => state.isVimMode);
+  const vimInstanceRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (editorRef.current && isVimMode) {
+      const statusNode = document.getElementById('vim-status');
+      if (statusNode) {
+        import('monaco-vim').then(({ initVimMode }) => {
+          vimInstanceRef.current = initVimMode(editorRef.current, statusNode);
+        }).catch(err => console.error("monaco-vim load error:", err));
+      }
+    } else if (!isVimMode && vimInstanceRef.current) {
+      vimInstanceRef.current.dispose();
+      vimInstanceRef.current = null;
+    }
+    
+    return () => {
+      if (vimInstanceRef.current) {
+        vimInstanceRef.current.dispose();
+        vimInstanceRef.current = null;
+      }
+    };
+  }, [isVimMode, editorRef.current]);
+
+  const uploadAndInsertImage = async (file: File) => {
+    if (!file.type.startsWith('image/')) return;
+    try {
+      const path = await api.uploadImage(file);
+      const imageSyntax = `\n![${file.name}](${path})\n`;
+      
+      const editor = editorRef.current;
+      if (editor) {
+        const selection = editor.getSelection();
+        editor.executeEdits('image-upload', [{
+          range: selection,
+          text: imageSyntax,
+          forceMoveMarkers: true
+        }]);
+      } else {
+        updateContent(content + imageSyntax);
+      }
+    } catch (e) {
+      console.error('Failed to upload image', e);
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (items) {
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          if (file) {
+            e.preventDefault();
+            uploadAndInsertImage(file);
+            return;
+          }
+        }
+      }
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const items = e.dataTransfer.items;
+    if (items) {
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          if (file) {
+            uploadAndInsertImage(file);
+            return;
+          }
+        }
+      }
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
 
   const handleEditorDidMount = (editor: any) => {
     editorRef.current = editor;
@@ -167,7 +250,12 @@ export const MarkdownEditor: React.FC = () => {
           title="Table" 
         />
       </div>
-      <div className="flex-1 min-h-0">
+      <div 
+        className="flex-1 min-h-0" 
+        onPaste={handlePaste}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+      >
         <Editor
           height="100%"
           defaultLanguage="markdown"

@@ -148,4 +148,15 @@ class FilesystemService:
         else:
             path.unlink()
 
+    async def save_asset(self, filename: str, file_bytes: bytes) -> str:
+        assets_dir = self.root / "assets"
+        assets_dir.mkdir(parents=True, exist_ok=True)
+        import time
+        safe_filename = filename.replace(" ", "_").replace("/", "")
+        name = f"{int(time.time())}_{safe_filename}"
+        file_path = assets_dir / name
+        async with aiofiles.open(file_path, 'wb') as f:
+            await f.write(file_bytes)
+        return f"assets/{name}"
+
 fs_service = FilesystemService()

@@ -56,6 +56,12 @@ export const api = {
     const encoded = encodeURIComponent(oldPath);
     await apiClient.patch(`/files/${encoded}/rename`, { new_path: newPath });
   },
+  uploadImage: async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post('/upload', formData);
+    return response.data.path;
+  },
   search: async (query: string): Promise<SearchResult[]> => {
     const response = await apiClient.get<SearchResult[]>('/search', { params: { q: query } });
     return response.data;

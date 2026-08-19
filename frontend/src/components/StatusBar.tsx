@@ -4,6 +4,7 @@ import { useAppStore } from '../stores/appStore';
 export const StatusBar: React.FC = () => {
   const content = useAppStore(state => state.currentContent);
   const currentFilePath = useAppStore(state => state.currentFilePath);
+  const isSaving = useAppStore(state => state.isSaving);
   
   if (!currentFilePath) return null;
 
@@ -18,8 +19,17 @@ export const StatusBar: React.FC = () => {
         <span>{charCount} chars</span>
         <span>{readTime} min read</span>
       </div>
-      <div>
-        Markdown Manager
+      
+      <div className="flex items-center space-x-4 ml-auto">
+        {useAppStore.getState().isVimMode && (
+          <div id="vim-status" className="font-mono text-accent-pink bg-dark-900 px-2 py-0.5 rounded border border-dark-700 min-w-[100px]" />
+        )}
+        <div className="flex space-x-4">
+          <span className="flex items-center">
+            {isSaving ? 'Saving...' : 'Saved'}
+          </span>
+          {currentFilePath && <span className="opacity-50 border-l border-dark-600 pl-4">{currentFilePath}</span>}
+        </div>
       </div>
     </div>
   );

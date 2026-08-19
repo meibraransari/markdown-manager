@@ -5,6 +5,8 @@ import { Sidebar } from '../components/Sidebar';
 import { Toolbar } from '../components/Toolbar';
 import { StatusBar } from '../components/StatusBar';
 import { InfoModal } from '../components/InfoModal';
+import { TabBar } from '../components/TabBar';
+import { CommandPalette } from '../components/CommandPalette';
 import { MarkdownReader } from '../markdown/MarkdownReader';
 import { MarkdownEditor } from '../editor/MarkdownEditor';
 import { useAppStore } from '../stores/appStore';
@@ -24,7 +26,8 @@ export const Workspace: React.FC = () => {
     autoSave,
     currentContent,
     currentFilePath,
-    showHiddenFiles
+    showHiddenFiles,
+    addOpenFile
   } = useAppStore();
 
 
@@ -66,6 +69,7 @@ export const Workspace: React.FC = () => {
         try {
           const file = await api.getFile(path);
           setCurrentFile(path, file.content);
+          addOpenFile(path);
         } catch (e) {
           console.error("Failed to load file", e);
         }
@@ -81,6 +85,11 @@ export const Workspace: React.FC = () => {
           e.preventDefault();
           useAppStore.getState().setSearchOpen(true);
         }
+      }
+      
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        useAppStore.getState().setCommandPaletteOpen(true);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -152,6 +161,7 @@ export const Workspace: React.FC = () => {
       </div>
       <div className="flex-1 flex flex-col h-full w-full overflow-hidden print-container">
         <div id="toolbar" className="print:hidden">
+          <TabBar />
           <Toolbar />
         </div>
         <div className="flex-1 overflow-hidden w-full flex print-container">
@@ -203,6 +213,7 @@ export const Workspace: React.FC = () => {
       <div className="info-modal print:hidden">
         <InfoModal />
       </div>
+      <CommandPalette />
     </Layout>
   );
 };
