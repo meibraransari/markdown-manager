@@ -21,6 +21,7 @@ interface AppState {
   isSearchOpen: boolean;
   isCommandPaletteOpen: boolean;
   isVimMode: boolean;
+  isGraphOpen: boolean;
   showHiddenFiles: boolean;
   openFiles: string[];
   
@@ -40,6 +41,7 @@ interface AppState {
   setSearchOpen: (isOpen: boolean) => void;
   setCommandPaletteOpen: (isOpen: boolean) => void;
   toggleVimMode: () => void;
+  setGraphOpen: (isOpen: boolean) => void;
   toggleHiddenFiles: () => void;
   addOpenFile: (path: string) => void;
   closeOpenFile: (path: string) => void;
@@ -63,6 +65,7 @@ export const useAppStore = create<AppState>((set) => ({
   isSearchOpen: false,
   isCommandPaletteOpen: false,
   isVimMode: false,
+  isGraphOpen: false,
   showHiddenFiles: false,
   openFiles: [],
 
@@ -118,9 +121,10 @@ export const useAppStore = create<AppState>((set) => ({
 
   toggleAutoSave: () => set((state) => ({ autoSave: !state.autoSave })),
   setInfoOpen: (isOpen: boolean) => set({ isInfoOpen: isOpen }),
-  setSearchOpen: (isOpen: boolean) => set({ isSearchOpen: isOpen }),
-  setCommandPaletteOpen: (isOpen: boolean) => set({ isCommandPaletteOpen: isOpen }),
+  setSearchOpen: (isOpen) => set({ isSearchOpen: isOpen }),
+  setCommandPaletteOpen: (isOpen) => set({ isCommandPaletteOpen: isOpen }),
   toggleVimMode: () => set((state) => ({ isVimMode: !state.isVimMode })),
+  setGraphOpen: (isOpen) => set({ isGraphOpen: isOpen }),
   toggleHiddenFiles: () => set((state) => ({ showHiddenFiles: !state.showHiddenFiles })),
   
   addOpenFile: (path: string) => set((state) => {

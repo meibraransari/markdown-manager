@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppStore } from '../stores/appStore';
 import { api } from '../api/client';
-import { Save, BookOpen, Edit3, ChevronRight, ZoomIn, ZoomOut, Copy, Lock, Unlock, ArrowLeft, ArrowRight, Printer, Info, RefreshCw, Home, ChevronDown } from 'lucide-react';
+import { Save, BookOpen, Edit3, ChevronRight, ZoomIn, ZoomOut, Copy, Lock, Unlock, ArrowLeft, ArrowRight, Printer, Info, RefreshCw, Home, ChevronDown, Download, Share2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 
@@ -23,7 +23,9 @@ export const Toolbar: React.FC = () => {
     setTheme,
     autoSave,
     toggleAutoSave,
-    setInfoOpen
+    setInfoOpen,
+    isGraphOpen,
+    setGraphOpen
   } = useAppStore();
 
   const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
@@ -72,6 +74,47 @@ export const Toolbar: React.FC = () => {
   const handleZoomIn = () => setZoomLevel(Math.min(zoomLevel + 10, 200));
   const handleZoomOut = () => setZoomLevel(Math.max(zoomLevel - 10, 50));
   const handleZoomReset = () => setZoomLevel(100);
+
+  const handleExportHTML = () => {
+    const previewPane = document.getElementById('preview-pane');
+    if (!previewPane) {
+      alert("Please switch to Read or Split mode to generate HTML export.");
+      return;
+    }
+    
+    const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${currentFilePath}</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 2rem; }
+    @media (prefers-color-scheme: dark) {
+      body { background-color: #1a1a1a; color: #e5e5e5; }
+      a { color: #58a6ff; }
+      code { background: #2d2d2d; padding: 0.2em 0.4em; border-radius: 3px; }
+      pre code { background: none; padding: 0; }
+      pre { background: #0d1117; padding: 16px; border-radius: 6px; overflow: auto; }
+      blockquote { border-left: 4px solid #30363d; padding-left: 1em; color: #8b949e; }
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+</head>
+<body>
+  ${previewPane.innerHTML}
+</body>
+</html>`;
+
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${currentFilePath?.split('/').pop()?.replace('.md', '') || 'export'}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const renderBreadcrumbs = () => {
     if (!currentFilePath) return null;
@@ -233,6 +276,20 @@ export const Toolbar: React.FC = () => {
                 <span>Edit</span>
                 {viewMode === 'edit' && <span className="w-1.5 h-1.5 rounded-full bg-accent-pink ml-1"></span>}
               </button>
+              
+              <div className="w-px h-5 bg-dark-600 mx-1 self-center"></div>
+              
+              <button 
+                onClick={() => setGraphOpen(!isGraphOpen)}
+                className={clsx(
+                  "flex items-center space-x-2 px-3 py-1 rounded-md transition-colors text-sm font-medium",
+                  isGraphOpen ? "bg-accent-purple/20 text-accent-purple shadow-sm" : "text-gray-400 hover:text-gray-200"
+                )}
+                title="Graph View"
+              >
+                <Share2 size={14} />
+                <span>Graph</span>
+              </button>
             </div>
             <div className="h-6 w-px bg-dark-700 mx-1"></div>
 
@@ -252,6 +309,14 @@ export const Toolbar: React.FC = () => {
               title="Print / Save as PDF"
             >
               <Printer size={18} />
+            </button>
+
+            <button 
+              onClick={handleExportHTML}
+              className="p-1.5 text-gray-400 hover:text-white hover:bg-dark-800 rounded transition-colors"
+              title="Export HTML"
+            >
+              <Download size={18} />
             </button>
 
             <button 

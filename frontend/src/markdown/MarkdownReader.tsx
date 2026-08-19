@@ -3,10 +3,14 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeSanitize from 'rehype-sanitize';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 import mermaid from 'mermaid';
-import 'highlight.js/styles/github-dark.css'; // Let's use a dark highlight theme
+import 'highlight.js/styles/github-dark.css';
+import 'katex/dist/katex.min.css';
 import { useAppStore } from '../stores/appStore';
 import { useNavigate } from 'react-router-dom';
+import { BacklinksPanel } from '../components/BacklinksPanel';
 
 interface Props {
   content: string;
@@ -40,8 +44,8 @@ export const MarkdownReader: React.FC<Props> = ({ content }) => {
       style={{ fontSize: `${zoomLevel}%` }}
     >
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeHighlight, rehypeSanitize]}
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[rehypeHighlight, rehypeSanitize, rehypeKatex]}
         components={{
           a: ({ node, href, children, ...props }) => {
             return (
@@ -83,6 +87,8 @@ export const MarkdownReader: React.FC<Props> = ({ content }) => {
       >
         {processedContent}
       </ReactMarkdown>
+      
+      <BacklinksPanel />
     </div>
   );
 };

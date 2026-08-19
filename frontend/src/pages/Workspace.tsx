@@ -11,6 +11,8 @@ import { MarkdownReader } from '../markdown/MarkdownReader';
 import { MarkdownEditor } from '../editor/MarkdownEditor';
 import { useAppStore } from '../stores/appStore';
 import { api } from '../api/client';
+import { GraphView } from '../components/GraphView';
+import { GitPanel } from '../components/GitPanel';
 
 export const isImage = (path: string) => /\.(png|jpe?g|gif|webp|svg|bmp|ico)$/i.test(path);
 export const isPdf = (path: string) => /\.pdf$/i.test(path);
@@ -31,7 +33,8 @@ export const Workspace: React.FC = () => {
     currentContent,
     currentFilePath,
     showHiddenFiles,
-    addOpenFile
+    addOpenFile,
+    isGraphOpen
   } = useAppStore();
 
 
@@ -174,7 +177,11 @@ export const Workspace: React.FC = () => {
           <Toolbar />
         </div>
         <div className="flex-1 overflow-hidden w-full flex print-container">
-          {!currentFilePath ? (
+          {isGraphOpen ? (
+            <div className="w-full h-full">
+              <GraphView />
+            </div>
+          ) : !currentFilePath ? (
             <div className="flex items-center justify-center h-full w-full text-gray-500">
               Select a file from the sidebar to start
             </div>
@@ -231,6 +238,7 @@ export const Workspace: React.FC = () => {
         <InfoModal />
       </div>
       <CommandPalette />
+      <GitPanel />
     </Layout>
   );
 };

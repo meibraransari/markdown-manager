@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from pathlib import Path
 
-from app.api import files, search
+from app.api import files, search, metadata, git
 
 app = FastAPI(title="Markdown Manager API")
 
@@ -22,6 +22,8 @@ def health_check():
 
 app.include_router(files.router, prefix="/api", tags=["Files"])
 app.include_router(search.router, prefix="/api", tags=["Search"])
+app.include_router(metadata.router, prefix="/api", tags=["Metadata"])
+app.include_router(git.router, prefix="/api", tags=["Git"])
 
 from fastapi.responses import FileResponse
 from app.config import settings

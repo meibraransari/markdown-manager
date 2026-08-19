@@ -65,5 +65,30 @@ export const api = {
   search: async (query: string): Promise<SearchResult[]> => {
     const response = await apiClient.get<SearchResult[]>('/search', { params: { q: query } });
     return response.data;
+  },
+  getGraph: async (): Promise<{ nodes: any[], links: any[] }> => {
+    const response = await apiClient.get('/metadata/graph');
+    return response.data;
+  },
+  getTags: async (): Promise<Record<string, string[]>> => {
+    const response = await apiClient.get('/metadata/tags');
+    return response.data;
+  },
+  getBacklinks: async (path: string): Promise<string[]> => {
+    const encoded = encodeURIComponent(path);
+    const response = await apiClient.get(`/metadata/backlinks/${encoded}`);
+    return response.data.backlinks;
+  },
+  getGitStatus: async (): Promise<string> => {
+    const response = await apiClient.get('/git/status');
+    return response.data.status;
+  },
+  gitCommit: async (message: string): Promise<string> => {
+    const response = await apiClient.post('/git/commit', { message });
+    return response.data.output;
+  },
+  getGitLog: async (): Promise<any[]> => {
+    const response = await apiClient.get('/git/log');
+    return response.data.commits;
   }
 };
