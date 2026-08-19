@@ -23,14 +23,15 @@ export const Workspace: React.FC = () => {
     setSaving,
     autoSave,
     currentContent,
-    currentFilePath
+    currentFilePath,
+    showHiddenFiles
   } = useAppStore();
 
 
   useEffect(() => {
     const fetchTree = async () => {
       try {
-        const tree = await api.getTree();
+        const tree = await api.getTree(showHiddenFiles);
         setFileTree(tree);
         
         // Auto-redirect to README.md if we are at root
@@ -57,7 +58,7 @@ export const Workspace: React.FC = () => {
       }
     };
     fetchTree();
-  }, [setFileTree, path, navigate]);
+  }, [setFileTree, path, navigate, showHiddenFiles]);
 
   useEffect(() => {
     const loadFile = async () => {

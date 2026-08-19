@@ -13,8 +13,8 @@ import urllib.parse
 router = APIRouter()
 
 @router.get("/tree", response_model=List[FileNode])
-def get_file_tree():
-    return fs_service.get_file_tree()
+def get_file_tree(show_hidden: bool = False):
+    return fs_service.get_file_tree(show_hidden=show_hidden)
 
 @router.get("/files/{path:path}", response_model=FileContent)
 async def get_file(path: str = Path(...)):

@@ -19,6 +19,7 @@ interface AppState {
   autoSave: boolean;
   isInfoOpen: boolean;
   isSearchOpen: boolean;
+  showHiddenFiles: boolean;
   
   setFileTree: (tree: FileNode[]) => void;
   setCurrentFile: (path: string, content: string) => void;
@@ -34,6 +35,7 @@ interface AppState {
   toggleAutoSave: () => void;
   setInfoOpen: (isOpen: boolean) => void;
   setSearchOpen: (isOpen: boolean) => void;
+  toggleHiddenFiles: () => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -52,6 +54,7 @@ export const useAppStore = create<AppState>((set) => ({
   autoSave: true,
   isInfoOpen: false,
   isSearchOpen: false,
+  showHiddenFiles: false,
 
   setFileTree: (tree) => set({ fileTree: tree }),
   
@@ -100,5 +103,6 @@ export const useAppStore = create<AppState>((set) => ({
 
   toggleAutoSave: () => set((state) => ({ autoSave: !state.autoSave })),
   setInfoOpen: (isOpen: boolean) => set({ isInfoOpen: isOpen }),
-  setSearchOpen: (isOpen: boolean) => set({ isSearchOpen: isOpen })
+  setSearchOpen: (isOpen: boolean) => set({ isSearchOpen: isOpen }),
+  toggleHiddenFiles: () => set((state) => ({ showHiddenFiles: !state.showHiddenFiles }))
 }));

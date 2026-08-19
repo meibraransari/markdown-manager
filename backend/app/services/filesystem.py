@@ -41,24 +41,24 @@ class FilesystemService:
         except ValueError:
             return ""
 
-    def get_file_tree(self, max_depth: int = 5) -> List[FileNode]:
-        return self._build_tree(self.root, current_depth=0, max_depth=max_depth)
+    def get_file_tree(self, max_depth: int = 5, show_hidden: bool = False) -> List[FileNode]:
+        return self._build_tree(self.root, current_depth=0, max_depth=max_depth, show_hidden=show_hidden)
 
-    def _build_tree(self, path: Path, current_depth: int, max_depth: int) -> List[FileNode]:
+    def _build_tree(self, path: Path, current_depth: int, max_depth: int, show_hidden: bool) -> List[FileNode]:
         nodes = []
         if current_depth > max_depth:
             return nodes
             
         try:
             for item in sorted(path.iterdir(), key=lambda x: (not x.is_dir(), x.name.lower())):
-                # Skip hidden files/dirs (like .git)
-                if item.name.startswith("."):
+                # Skip hidden files/dirs (like .git) if not show_hidden
+                if not show_hidden and item.name.startswith("."):
                     continue
                     
                 rel_path = self._to_relative_path(item)
                 
                 if item.is_dir():
-                    children = self._build_tree(item, current_depth + 1, max_depth)
+                    children = self._build_tree(item, current_depth + 1, max_depth, show_hidden)
                     nodes.append(FileNode(
                         name=item.name,
                         path=rel_path,

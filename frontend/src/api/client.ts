@@ -30,8 +30,8 @@ export interface SearchResult {
 }
 
 export const api = {
-  getTree: async (): Promise<FileNode[]> => {
-    const response = await apiClient.get<FileNode[]>('/tree');
+  getTree: async (showHidden: boolean = false): Promise<FileNode[]> => {
+    const response = await apiClient.get<FileNode[]>('/tree', { params: { show_hidden: showHidden } });
     return response.data;
   },
   getFile: async (path: string): Promise<FileContent> => {

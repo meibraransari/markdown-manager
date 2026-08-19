@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../stores/appStore';
-import { Folder, File, ChevronRight, ChevronDown, FileText, Image as ImageIcon, Trash2, Edit3, Search, X, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Folder, File, ChevronRight, ChevronDown, FileText, Image as ImageIcon, Trash2, Edit3, Search, X, PanelLeftClose, PanelLeftOpen, Eye, EyeOff } from 'lucide-react';
 import type { FileNode, SearchResult } from '../api/client';
 import { api } from '../api/client';
 import { clsx } from 'clsx';
@@ -121,7 +121,7 @@ const FileTreeItem: React.FC<{ node: FileNode; level: number; search: string }> 
 export const Sidebar: React.FC = () => {
   const fileTree = useAppStore(state => state.fileTree);
   const setFileTree = useAppStore(state => state.setFileTree);
-  const { isSidebarOpen, toggleSidebar, isSearchOpen, setSearchOpen } = useAppStore();
+  const { isSidebarOpen, toggleSidebar, isSearchOpen, setSearchOpen, showHiddenFiles, toggleHiddenFiles } = useAppStore();
   const [search, setSearch] = useState('');
   const [globalSearchQuery, setGlobalSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -225,6 +225,16 @@ export const Sidebar: React.FC = () => {
           <div className="flex items-center space-x-1">
             <button onClick={() => setSearchOpen(true)} className="flex-1 flex justify-center py-1.5 text-gray-400 hover:text-white bg-dark-900 hover:bg-dark-700 rounded transition-colors" title="Global Search">
               <Search size={16} />
+            </button>
+            <button 
+              onClick={toggleHiddenFiles} 
+              className={clsx(
+                "flex-1 flex justify-center py-1.5 rounded transition-colors",
+                showHiddenFiles ? "text-accent-pink bg-dark-700" : "text-gray-400 hover:text-white bg-dark-900 hover:bg-dark-700"
+              )} 
+              title={showHiddenFiles ? "Hide Hidden Files" : "Show All Files"}
+            >
+              {showHiddenFiles ? <Eye size={16} /> : <EyeOff size={16} />}
             </button>
             <button onClick={handleCreateFile} className="flex-1 flex justify-center py-1.5 text-gray-400 hover:text-accent-neon bg-dark-900 hover:bg-dark-700 rounded transition-colors" title="New File">
               <FileText size={16} />
