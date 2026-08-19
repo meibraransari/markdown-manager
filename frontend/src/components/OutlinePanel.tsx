@@ -35,9 +35,23 @@ export const OutlinePanel: React.FC = () => {
   if (outline.length === 0) return null;
 
   const handleClick = (line: number) => {
+    const totalLines = content.split('\n').length || 1;
+    const percentage = line / totalLines;
+    
+    // Scroll editor if available (Split mode)
     if ((window as any).scrollToEditorPercentage) {
-      const totalLines = content.split('\n').length || 1;
-      (window as any).scrollToEditorPercentage(line / totalLines);
+      (window as any).scrollToEditorPercentage(percentage);
+    }
+    
+    // Scroll preview pane if available (Read mode / Split mode)
+    const previewPane = document.getElementById('preview-pane');
+    if (previewPane) {
+      const scrollHeight = previewPane.scrollHeight;
+      const height = previewPane.clientHeight;
+      previewPane.scrollTo({
+        top: percentage * (scrollHeight - height),
+        behavior: 'smooth'
+      });
     }
   };
 
