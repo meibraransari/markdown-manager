@@ -1,0 +1,16 @@
+services:
+  markdown-manager:
+    build: .
+    ports:
+      - "${PORT:-8000}:8000"
+    volumes:
+      - ${MARKDOWN_ROOT:-./workspace}:/workspace
+    environment:
+      - MARKDOWN_ROOT=/workspace
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
