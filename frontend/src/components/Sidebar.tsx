@@ -1,15 +1,23 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../stores/appStore';
-import { Folder, File, ChevronRight, ChevronDown, FileText, Image as ImageIcon, Trash2, Edit3, Search, X, PanelLeftClose, PanelLeftOpen, Eye, EyeOff } from 'lucide-react';
+import { Folder, File, ChevronRight, ChevronDown, FileText, Image as ImageIcon, Trash2, Edit3, Search, X, PanelLeftClose, PanelLeftOpen, Eye, EyeOff, ChevronsDown, ChevronsUp } from 'lucide-react';
 import type { FileNode, SearchResult } from '../api/client';
 import { api } from '../api/client';
 import { clsx } from 'clsx';
 import { useNavigate } from 'react-router-dom';
 
-const FileTreeItem: React.FC<{ node: FileNode; level: number; search: string }> = ({ node, level, search }) => {
+const FileTreeItem: React.FC<{ node: FileNode; level: number; search: string; expandSignal: number; collapseSignal: number }> = ({ node, level, search, expandSignal, collapseSignal }) => {
   const [isOpen, setIsOpen] = useState(false);
   const currentFilePath = useAppStore(state => state.currentFilePath);
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (expandSignal > 0 && node.type === 'directory') setIsOpen(true);
+  }, [expandSignal, node.type]);
+
+  React.useEffect(() => {
+    if (collapseSignal > 0 && node.type === 'directory') setIsOpen(false);
+  }, [collapseSignal, node.type]);
 
   const isSelected = currentFilePath === node.path;
   const isDir = node.type === 'directory';
@@ -110,8 +118,14 @@ const FileTreeItem: React.FC<{ node: FileNode; level: number; search: string }> 
       {isDir && effectivelyOpen && node.children && (
         <div>
           {node.children.map((child, i) => (
-            <FileTreeItem key={i} node={child} level={level + 1} search={search} />
-          ))}
+            <FileTreeItem 
+              key={i} 
+              node={child} 
+              level={level + 1} 
+              search={search} 
+              expandSignal={expandSignal} 
+              collapseSignal={collapseSignal} 
+            />))}
         </div>
       )}
     </div>
@@ -126,6 +140,8 @@ export const Sidebar: React.FC = () => {
   const [globalSearchQuery, setGlobalSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [expandSignal, setExpandSignal] = useState(0);
+  const [collapseSignal, setCollapseSignal] = useState(0);
   const navigate = useNavigate();
 
   if (!isSidebarOpen) {
@@ -243,6 +259,22 @@ export const Sidebar: React.FC = () => {
               <Folder size={16} />
             </button>
           </div>
+          <div className="flex items-center space-x-1 mt-2">
+            <button 
+              onClick={() => setExpandSignal(s => s + 1)} 
+              className="flex-1 flex justify-center py-1.5 text-gray-400 hover:text-white bg-dark-900 hover:bg-dark-700 rounded transition-colors" 
+              title="Expand All Folders"
+            >
+              <ChevronsDown size={16} />
+            </button>
+            <button 
+              onClick={() => setCollapseSignal(s => s + 1)} 
+              className="flex-1 flex justify-center py-1.5 text-gray-400 hover:text-white bg-dark-900 hover:bg-dark-700 rounded transition-colors" 
+              title="Collapse All Folders"
+            >
+              <ChevronsUp size={16} />
+            </button>
+          </div>
           <div className="relative">
             <input 
               type="text" 
@@ -265,7 +297,14 @@ export const Sidebar: React.FC = () => {
         <div className="flex-1 overflow-y-auto p-2">
           {visibleTree.length > 0 ? (
             visibleTree.map((node, i) => (
-              <FileTreeItem key={i} node={node} level={0} search={search} />
+              <FileTreeItem 
+                key={i} 
+                node={node} 
+                level={0} 
+                search={search} 
+                expandSignal={expandSignal}
+                collapseSignal={collapseSignal}
+              />
             ))
           ) : (
             <div className="text-center text-sm text-gray-500 mt-4">No files match "{search}"</div>

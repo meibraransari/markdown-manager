@@ -59,6 +59,10 @@ class FilesystemService:
                 
                 if item.is_dir():
                     children = self._build_tree(item, current_depth + 1, max_depth, show_hidden)
+                    # If not showing all files, only include directories that have children (or are empty, but typically we just include all non-hidden dirs)
+                    if not show_hidden and not children and current_depth > 0:
+                        # Optionally, you can omit empty directories if they have no .md files
+                        pass
                     nodes.append(FileNode(
                         name=item.name,
                         path=rel_path,
@@ -66,7 +70,10 @@ class FilesystemService:
                         children=children
                     ))
                 else:
-                    # Optional: filter by extensions here if needed
+                    # Filter by .md extension if not show_hidden
+                    if not show_hidden and not item.name.lower().endswith(".md"):
+                        continue
+                        
                     stat = item.stat()
                     nodes.append(FileNode(
                         name=item.name,
