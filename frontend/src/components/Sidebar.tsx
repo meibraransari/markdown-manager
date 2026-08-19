@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../stores/appStore';
-import { Folder, File, ChevronRight, ChevronDown, FileText, Image as ImageIcon, Trash2, Edit3, Search, X, PanelLeftClose, PanelLeftOpen, Eye, EyeOff, ChevronsDown, ChevronsUp, Calendar, Settings } from 'lucide-react';
+import { Folder, File, ChevronRight, ChevronDown, FileText, Image as ImageIcon, Trash2, Edit3, Search, X, PanelLeftClose, PanelLeftOpen, Eye, EyeOff, ChevronsDown, ChevronsUp, Calendar, Settings, Upload } from 'lucide-react';
 import { OutlinePanel } from './OutlinePanel';
 import { TagsPanel } from './TagsPanel';
 import type { FileNode, SearchResult } from '../api/client';
@@ -8,7 +8,7 @@ import { api } from '../api/client';
 import { clsx } from 'clsx';
 import { useNavigate } from 'react-router-dom';
 
-const FileTreeItem: React.FC<{ node: FileNode; level: number; search: string; expandSignal: number; collapseSignal: number }> = ({ node, level, search, expandSignal, collapseSignal }) => {
+const FileTreeItem: React.FC<{ node: FileNode; level: number; search: string; expandSignal: number; collapseSignal: number; onRequestDelete: (node: FileNode) => void }> = ({ node, level, search, expandSignal, collapseSignal, onRequestDelete }) => {
   const [isOpen, setIsOpen] = useState(false);
   const currentFilePath = useAppStore(state => state.currentFilePath);
   const navigate = useNavigate();
@@ -39,18 +39,7 @@ const FileTreeItem: React.FC<{ node: FileNode; level: number; search: string; ex
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm(`Are you sure you want to delete ${node.name}?`)) {
-      try {
-        await api.deleteItem(node.path);
-        const tree = await api.getTree();
-        useAppStore.getState().setFileTree(tree);
-        if (isSelected) {
-          navigate('/');
-        }
-      } catch (e: any) {
-        alert("Failed to delete item");
-      }
-    }
+    onRequestDelete(node);
   };
 
   return (
@@ -127,6 +116,7 @@ const FileTreeItem: React.FC<{ node: FileNode; level: number; search: string; ex
               search={search} 
               expandSignal={expandSignal} 
               collapseSignal={collapseSignal} 
+              onRequestDelete={onRequestDelete}
             />))}
         </div>
       )}
@@ -143,7 +133,44 @@ export const Sidebar: React.FC = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [expandSignal, setExpandSignal] = useState(0);
   const [collapseSignal, setCollapseSignal] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [nodeToDelete, setNodeToDelete] = useState<FileNode | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      await api.uploadFile(file);
+      const tree = await api.getTree(showHiddenFiles);
+      setFileTree(tree);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to upload file.");
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length === 0) return;
+    
+    try {
+      for (const file of files) {
+        await api.uploadFile(file);
+      }
+      const tree = await api.getTree(showHiddenFiles);
+      setFileTree(tree);
+    } catch (error) {
+      console.error('Failed to upload files:', error);
+      alert('Failed to upload files.');
+    }
+  };
 
   const handleDailyNote = async () => {
     try {
@@ -233,8 +260,54 @@ export const Sidebar: React.FC = () => {
 
   const visibleTree = filterTree(fileTree, search);
 
+  const confirmDelete = async () => {
+    if (!nodeToDelete) return;
+    try {
+      await api.deleteItem(nodeToDelete.path);
+      const tree = await api.getTree(showHiddenFiles);
+      setFileTree(tree);
+      const currentFilePath = useAppStore.getState().currentFilePath;
+      if (currentFilePath === nodeToDelete.path) {
+        navigate('/');
+      }
+      setNodeToDelete(null);
+    } catch (e: any) {
+      alert("Failed to delete item");
+    }
+  };
+
   return (
     <>
+      {nodeToDelete && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-dark-800 border border-dark-600 rounded-lg shadow-xl p-6 max-w-sm w-full mx-4 animate-in zoom-in-95 duration-200">
+            <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+              <Trash2 size={20} className="text-red-400" />
+              Delete {nodeToDelete.type === 'directory' ? 'Folder' : 'File'}
+            </h3>
+            <p className="text-gray-400 mb-6 text-sm">
+              Are you sure you want to delete <span className="font-semibold text-white">"{nodeToDelete.name}"</span>? 
+              {nodeToDelete.type === 'directory' && " All contents inside this folder will be permanently deleted."}
+              <br/><br/>
+              This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button 
+                onClick={() => setNodeToDelete(null)} 
+                className="px-4 py-2 rounded text-sm font-medium text-gray-300 hover:text-white hover:bg-dark-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmDelete} 
+                className="px-4 py-2 rounded text-sm font-medium bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="w-64 flex-shrink-0 bg-dark-800 border-r border-dark-700 flex flex-col h-full transition-all duration-300">
         <div className="p-4 border-b border-dark-700 flex flex-col space-y-4">
           <div className="flex items-center justify-between">
@@ -277,6 +350,10 @@ export const Sidebar: React.FC = () => {
             </button>
           </div>
           <div className="flex items-center space-x-1 mt-2">
+            <button onClick={() => fileInputRef.current?.click()} className="flex-1 flex justify-center py-1.5 text-gray-400 hover:text-accent-neon bg-dark-900 hover:bg-dark-700 rounded transition-colors" title="Import File">
+              <Upload size={16} />
+            </button>
+            <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileUpload} />
             <button 
               onClick={() => setExpandSignal(s => s + 1)} 
               className="flex-1 flex justify-center py-1.5 text-gray-400 hover:text-white bg-dark-900 hover:bg-dark-700 rounded transition-colors" 
@@ -311,7 +388,23 @@ export const Sidebar: React.FC = () => {
             )}
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-2">
+        <div 
+          className={clsx(
+            "flex-1 overflow-y-auto p-2 transition-colors relative",
+            isDragging && "bg-dark-700 ring-2 ring-inset ring-accent-purple"
+          )}
+          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+          onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
+          onDrop={handleDrop}
+        >
+          {isDragging && (
+            <div className="absolute inset-0 flex items-center justify-center bg-dark-800/80 backdrop-blur-sm z-10 text-accent-purple font-medium border-2 border-dashed border-accent-purple rounded m-2 pointer-events-none">
+              <div className="flex flex-col items-center">
+                <Upload size={32} className="mb-2" />
+                <span>Drop files to import</span>
+              </div>
+            </div>
+          )}
           {visibleTree.length > 0 ? (
             visibleTree.map((node, i) => (
               <FileTreeItem 
@@ -321,13 +414,14 @@ export const Sidebar: React.FC = () => {
                 search={search} 
                 expandSignal={expandSignal}
                 collapseSignal={collapseSignal}
+                onRequestDelete={(node) => setNodeToDelete(node)}
               />
             ))
             ) : (
               <div className="text-center text-sm text-gray-500 mt-4">No files match "{search}"</div>
             )}
-          </div>
-          <TagsPanel />
+        </div>
+        <TagsPanel />
           <OutlinePanel />
         </div>
 

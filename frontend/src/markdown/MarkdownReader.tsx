@@ -13,6 +13,7 @@ import { useAppStore } from '../stores/appStore';
 import { useNavigate } from 'react-router-dom';
 import { BacklinksPanel } from '../components/BacklinksPanel';
 import { PropertiesPanel } from '../components/PropertiesPanel';
+import { clsx } from 'clsx';
 
 interface Props {
   content: string;
@@ -21,6 +22,8 @@ interface Props {
 export const MarkdownReader: React.FC<Props> = ({ content }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const zoomLevel = useAppStore(state => state.zoomLevel);
+  const isPageView = useAppStore(state => state.isPageView);
+  const pageWidth = useAppStore(state => state.pageWidth);
   const navigate = useNavigate();
 
   // Transform [[Page Name]] into [Page Name](Page Name.md)
@@ -40,14 +43,29 @@ export const MarkdownReader: React.FC<Props> = ({ content }) => {
   }, [content]);
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto">
-      <PropertiesPanel />
+    <div className={clsx(
+      "flex flex-col min-h-full transition-colors duration-200",
+      isPageView ? "bg-dark-900 py-8 px-4" : ""
+    )}>
       <div 
-        ref={containerRef} 
-        className="max-w-4xl mx-auto px-8 pb-8 pt-4 w-full prose transition-all duration-200"
-        style={{ fontSize: `${zoomLevel}%` }}
+        className={clsx(
+          "transition-all duration-200 w-full mx-auto",
+          isPageView ? "bg-dark-800 shadow-2xl rounded-sm border border-dark-700 min-h-[1056px]" : "max-w-4xl"
+        )}
+        style={{
+          maxWidth: isPageView ? `${pageWidth}px` : undefined,
+        }}
       >
-        <ReactMarkdown
+        <PropertiesPanel />
+        <div 
+          ref={containerRef} 
+          className={clsx(
+            "mx-auto w-full prose transition-all duration-200",
+            isPageView ? "px-16 py-16" : "px-8 pb-8 pt-4"
+          )}
+          style={{ fontSize: `${zoomLevel}%` }}
+        >
+          <ReactMarkdown
           remarkPlugins={[remarkFrontmatter, remarkGfm, remarkMath]}
         rehypePlugins={[rehypeHighlight, rehypeSanitize, rehypeKatex]}
         components={{
@@ -91,6 +109,7 @@ export const MarkdownReader: React.FC<Props> = ({ content }) => {
       >
         {processedContent}
       </ReactMarkdown>
+        </div>
       </div>
       <BacklinksPanel />
     </div>

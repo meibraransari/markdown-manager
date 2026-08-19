@@ -27,6 +27,7 @@ A production-quality, deeply integrated, locally-hosted Markdown Knowledge Base 
 - **Multi-File Tabs**: Open multiple files concurrently in a tabbed interface.
 - **Command Palette**: Press `Ctrl+P` (or `Cmd+P`) to quickly fuzzy-search and jump between files.
 - **Outline / TOC**: Sidebar panel displaying a dynamically generated Table of Contents for the active file.
+- **Import & Upload**: Click the Import button in the sidebar or natively drag-and-drop any files directly into the sidebar to upload them to your workspace.
 
 ### Customization & Export
 - **10+ Pro Themes**: Built-in color themes including Light, Dark, Obsidian, Dracula, Nord, Monokai, GitHub Dark, Solarized, Gruvbox, and One Dark.

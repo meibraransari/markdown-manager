@@ -28,6 +28,8 @@ interface AppState {
   templateFolder: string;
   isSettingsOpen: boolean;
   isTasksOpen: boolean;
+  isPageView: boolean;
+  pageWidth: number;
   
   setFileTree: (tree: FileNode[]) => void;
   setCurrentFile: (path: string, content: string) => void;
@@ -53,6 +55,8 @@ interface AppState {
   setTemplateFolder: (folder: string) => void;
   setSettingsOpen: (isOpen: boolean) => void;
   setTasksOpen: (isOpen: boolean) => void;
+  setIsPageView: (isPageView: boolean) => void;
+  setPageWidth: (width: number) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -76,10 +80,12 @@ export const useAppStore = create<AppState>((set) => ({
   isGraphOpen: false,
   showHiddenFiles: false,
   openFiles: [],
-  customCss: localStorage.getItem('markdown-manager-custom-css') || '',
-  templateFolder: localStorage.getItem('markdown-manager-template-folder') || 'Templates',
+  customCss: localStorage.getItem('customCss') || '',
+  templateFolder: localStorage.getItem('templateFolder') || 'Templates',
   isSettingsOpen: false,
   isTasksOpen: false,
+  isPageView: localStorage.getItem('isPageView') === 'true',
+  pageWidth: parseInt(localStorage.getItem('pageWidth') || '800'),
 
   setFileTree: (tree) => set({ fileTree: tree }),
   
@@ -159,4 +165,12 @@ export const useAppStore = create<AppState>((set) => ({
   },
   setSettingsOpen: (isOpen: boolean) => set({ isSettingsOpen: isOpen }),
   setTasksOpen: (isOpen: boolean) => set({ isTasksOpen: isOpen }),
+  setIsPageView: (isPageView: boolean) => {
+    localStorage.setItem('isPageView', isPageView.toString());
+    set({ isPageView });
+  },
+  setPageWidth: (width: number) => {
+    localStorage.setItem('pageWidth', width.toString());
+    set({ pageWidth: width });
+  },
 }));

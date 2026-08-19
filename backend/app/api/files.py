@@ -75,6 +75,14 @@ async def upload_file(file: UploadFile = File(...)):
     path = await fs_service.save_asset(file.filename, file_bytes)
     return {"path": path}
 
+@router.post("/import")
+async def import_file(file: UploadFile = File(...)):
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No filename provided")
+    file_bytes = await file.read()
+    path = await fs_service.import_file(file.filename, file_bytes)
+    return {"path": path}
+
 @router.delete("/files/{path:path}")
 def delete_item(path: str = Path(...)):
     decoded_path = urllib.parse.unquote(path)

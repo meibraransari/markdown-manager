@@ -159,4 +159,20 @@ class FilesystemService:
             await f.write(file_bytes)
         return f"assets/{name}"
 
+    async def import_file(self, filename: str, file_bytes: bytes) -> str:
+        safe_filename = filename.replace("/", "")
+        file_path = self.root / safe_filename
+        
+        # If file exists, append a number
+        counter = 1
+        base_name = file_path.stem
+        suffix = file_path.suffix
+        while file_path.exists():
+            file_path = self.root / f"{base_name}_{counter}{suffix}"
+            counter += 1
+            
+        async with aiofiles.open(file_path, 'wb') as f:
+            await f.write(file_bytes)
+        return self._to_relative_path(file_path)
+
 fs_service = FilesystemService()
