@@ -19,6 +19,31 @@ interface Props {
   content: string;
 }
 
+const MermaidChart: React.FC<{ chart: string }> = ({ chart }) => {
+  const [svg, setSvg] = React.useState<string>('');
+
+  useEffect(() => {
+    const renderChart = async () => {
+      try {
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'dark',
+          securityLevel: 'loose',
+        });
+        const id = 'mermaid-' + Math.random().toString(36).substr(2, 9);
+        const { svg: svgCode } = await mermaid.render(id, chart);
+        setSvg(svgCode);
+      } catch (e) {
+        console.error('Mermaid rendering failed', e);
+        setSvg(`<div class="text-red-400 border border-red-500/20 p-4 rounded bg-red-500/10 text-sm font-mono whitespace-pre overflow-x-auto">${chart}</div>`);
+      }
+    };
+    renderChart();
+  }, [chart]);
+
+  return <div dangerouslySetInnerHTML={{ __html: svg }} className="flex justify-center py-4 w-full overflow-x-auto" />;
+};
+
 export const MarkdownReader: React.FC<Props> = ({ content }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const zoomLevel = useAppStore(state => state.zoomLevel);
@@ -28,19 +53,6 @@ export const MarkdownReader: React.FC<Props> = ({ content }) => {
 
   // Transform [[Page Name]] into [Page Name](Page Name.md)
   const processedContent = content.replace(/\[\[(.*?)\]\]/g, '[$1]($1.md)');
-
-  useEffect(() => {
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: 'dark',
-      securityLevel: 'loose',
-    });
-    if (containerRef.current) {
-      mermaid.run({
-        nodes: containerRef.current.querySelectorAll('.language-mermaid'),
-      }).catch(e => console.error("Mermaid render error", e));
-    }
-  }, [content]);
 
   return (
     <div className={clsx(
@@ -67,8 +79,8 @@ export const MarkdownReader: React.FC<Props> = ({ content }) => {
         >
           <ReactMarkdown
           remarkPlugins={[remarkFrontmatter, remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeHighlight, rehypeSanitize, rehypeKatex]}
-        components={{
+          rehypePlugins={[rehypeSanitize, [rehypeHighlight, { ignoreMissing: true }], rehypeKatex]}
+          components={{
           a: ({ node, href, children, ...props }) => {
             return (
               <a 
@@ -87,13 +99,15 @@ export const MarkdownReader: React.FC<Props> = ({ content }) => {
           },
           code({ node, inline, className, children, ...props }: any) {
             const match = /language-(\w+)/.exec(className || '');
-            const isMermaid = match && match[1] === 'mermaid';
-            if (!inline && isMermaid) {
-              return (
-                <div className="mermaid language-mermaid flex justify-center py-4">
-                  {String(children).replace(/\n$/, '')}
-                </div>
-              );
+            const lang = match ? match[1].toLowerCase() : '';
+            const chartText = String(children).replace(/\n$/, '');
+            
+            const isMermaidLang = ['mermaid', 'marmarid', 'mermaidjs'].includes(lang);
+            const isMermaidContent = /^(graph\s|flowchart\s|sequenceDiagram|classDiagram|stateDiagram|erDiagram|gantt|pie|journey|gitGraph|mindmap|timeline)\b/i.test(chartText.trim());
+            const isProgrammingLang = ['javascript', 'js', 'typescript', 'ts', 'python', 'py', 'java', 'c', 'cpp', 'go', 'rust', 'bash', 'sh', 'json', 'yaml', 'yml', 'html', 'css', 'sql'].includes(lang);
+            
+            if (!inline && (isMermaidLang || (isMermaidContent && !isProgrammingLang))) {
+              return <MermaidChart chart={chartText} />;
             }
             return !inline ? (
               <code className={className} {...props}>
