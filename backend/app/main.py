@@ -24,6 +24,11 @@ app.include_router(files.router, prefix="/api", tags=["Files"])
 app.include_router(search.router, prefix="/api", tags=["Search"])
 
 from fastapi.responses import FileResponse
+from app.config import settings
+
+# Mount raw workspace files
+if settings.absolute_markdown_root.exists():
+    app.mount("/raw", StaticFiles(directory=settings.absolute_markdown_root), name="raw")
 
 # Serve static files for frontend if dist folder exists
 frontend_dist = Path(__file__).parent.parent.parent / "frontend" / "dist"

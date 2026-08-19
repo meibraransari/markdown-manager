@@ -12,6 +12,10 @@ import { MarkdownEditor } from '../editor/MarkdownEditor';
 import { useAppStore } from '../stores/appStore';
 import { api } from '../api/client';
 
+export const isImage = (path: string) => /\.(png|jpe?g|gif|webp|svg|bmp|ico)$/i.test(path);
+export const isPdf = (path: string) => /\.pdf$/i.test(path);
+export const isMedia = (path: string) => isImage(path) || isPdf(path);
+
 export const Workspace: React.FC = () => {
   const { "*": path } = useParams();
   const navigate = useNavigate();
@@ -67,9 +71,14 @@ export const Workspace: React.FC = () => {
     const loadFile = async () => {
       if (path && path !== currentFilePath) {
         try {
-          const file = await api.getFile(path);
-          setCurrentFile(path, file.content);
-          addOpenFile(path);
+          if (isMedia(path)) {
+            setCurrentFile(path, "");
+            addOpenFile(path);
+          } else {
+            const file = await api.getFile(path);
+            setCurrentFile(path, file.content);
+            addOpenFile(path);
+          }
         } catch (e) {
           console.error("Failed to load file", e);
         }
@@ -137,7 +146,7 @@ export const Workspace: React.FC = () => {
   }, [isDragging]);
 
   useEffect(() => {
-    if (!autoSave || !isDirty || !currentFilePath || isSaving) return;
+    if (!autoSave || !isDirty || !currentFilePath || isSaving || isMedia(currentFilePath)) return;
 
     const timeout = setTimeout(async () => {
       setSaving(true);
@@ -168,6 +177,14 @@ export const Workspace: React.FC = () => {
           {!currentFilePath ? (
             <div className="flex items-center justify-center h-full w-full text-gray-500">
               Select a file from the sidebar to start
+            </div>
+          ) : isMedia(currentFilePath) ? (
+            <div className="flex items-center justify-center h-full w-full bg-dark-900 overflow-auto p-4">
+              {isImage(currentFilePath) ? (
+                <img src={`/raw/${currentFilePath}`} alt={currentFilePath} className="max-w-full max-h-full object-contain" />
+              ) : (
+                <iframe src={`/raw/${currentFilePath}`} className="w-full h-full border-none" />
+              )}
             </div>
           ) : viewMode === 'split' ? (
             <div className="flex w-full h-full relative select-none print-container" ref={containerRef}>
