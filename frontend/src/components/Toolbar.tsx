@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppStore } from '../stores/appStore';
 import { api } from '../api/client';
-import { Save, BookOpen, Edit3, ChevronRight, ZoomIn, ZoomOut, Copy, Lock, Unlock, ArrowLeft, ArrowRight, Printer, Info, RefreshCw, Home, ChevronDown, Download, Share2, CheckSquare } from 'lucide-react';
+import { Save, BookOpen, Edit3, ChevronRight, ZoomIn, ZoomOut, Copy, Lock, Unlock, ArrowLeft, ArrowRight, Printer, Info, RefreshCw, Home, ChevronDown, Download, CheckSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 
@@ -24,7 +24,6 @@ export const Toolbar: React.FC = () => {
     autoSave,
     toggleAutoSave,
     setInfoOpen,
-    isGraphOpen, setGraphOpen,
     isTasksOpen, setTasksOpen
   } = useAppStore();
 
@@ -277,19 +276,7 @@ export const Toolbar: React.FC = () => {
                 {viewMode === 'edit' && <span className="w-1.5 h-1.5 rounded-full bg-accent-pink ml-1"></span>}
               </button>
               
-              <div className="w-px h-5 bg-dark-600 mx-1 self-center"></div>
-              
-              <button 
-                onClick={() => setGraphOpen(!isGraphOpen)}
-                className={clsx(
-                  "flex items-center space-x-2 px-3 py-1 rounded-md transition-colors text-sm font-medium",
-                  isGraphOpen ? "bg-accent-purple/20 text-accent-purple shadow-sm" : "text-gray-400 hover:text-gray-200"
-                )}
-                title="Graph View"
-              >
-                <Share2 size={14} />
-                <span>Graph</span>
-              </button>
+              <div className="w-px h-5 bg-dark-600 mx-1 self-center hidden"></div>
             </div>
             <div className="h-6 w-px bg-dark-700 mx-1"></div>
 

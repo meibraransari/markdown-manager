@@ -41,7 +41,9 @@ export const GraphView: React.FC = () => {
         linkColor={() => theme === 'theme-light' ? '#cbd5e1' : '#30363d'}
         backgroundColor={theme === 'theme-light' ? '#ffffff' : '#0d1117'}
         onNodeClick={(node: any) => {
-          navigate(`/${node.path.split('/').map(encodeURIComponent).join('/')}`);
+          const path = node.path || node.id;
+          if (!path) return;
+          navigate(`/${path.split('/').map(encodeURIComponent).join('/')}`);
           useAppStore.getState().setGraphOpen(false);
         }}
       />
