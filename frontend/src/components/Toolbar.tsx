@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppStore } from '../stores/appStore';
 import { api } from '../api/client';
-import { Save, BookOpen, Edit3, ChevronRight, ZoomIn, ZoomOut, Copy, Lock, Unlock, ArrowLeft, ArrowRight, Printer, Info, RefreshCw, Home, ChevronDown, Download, CheckSquare } from 'lucide-react';
+import { Save, BookOpen, Edit3, ChevronRight, ZoomIn, ZoomOut, Copy, Lock, Unlock, ArrowLeft, ArrowRight, Printer, Info, RefreshCw, Home, ChevronDown, Download, CheckSquare, LayoutList } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 
@@ -24,7 +24,9 @@ export const Toolbar: React.FC = () => {
     autoSave,
     toggleAutoSave,
     setInfoOpen,
-    isTasksOpen, setTasksOpen
+    isTasksOpen, setTasksOpen,
+    isPageView, setIsPageView,
+    pageWidth, setPageWidth
   } = useAppStore();
 
   const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
@@ -251,6 +253,36 @@ export const Toolbar: React.FC = () => {
                 <BookOpen size={14} />
                 <span>Read</span>
               </button>
+              {(viewMode === 'read' || viewMode === 'split') && (
+                <div className="flex items-center">
+                  <button
+                    onClick={() => setIsPageView(!isPageView)}
+                    className={clsx(
+                      "flex items-center space-x-1 px-2 py-1 rounded-md transition-colors text-xs font-medium ml-1 border border-dark-600",
+                      isPageView ? "bg-accent-blue/20 text-accent-blue border-accent-blue/30" : "text-gray-400 hover:text-gray-200 bg-dark-700"
+                    )}
+                    title={isPageView ? "Disable Page View" : "Enable Page View (MS Word style)"}
+                  >
+                    <LayoutList size={12} />
+                    <span className="hidden sm:inline">Page</span>
+                  </button>
+                  {isPageView && (
+                    <div className="flex items-center ml-2 px-2 py-1 bg-dark-700 rounded-md border border-dark-600 h-[26px]">
+                      <input 
+                        type="range" 
+                        min="400" 
+                        max="1600" 
+                        step="50"
+                        value={pageWidth}
+                        onChange={(e) => setPageWidth(parseInt(e.target.value))}
+                        className="w-16 h-1 accent-accent-blue"
+                        title="Page Width"
+                      />
+                      <span className="text-[10px] text-gray-400 ml-2 w-8 hidden sm:inline">{pageWidth}px</span>
+                    </div>
+                  )}
+                </div>
+              )}
               <button 
                 onClick={() => setViewMode('split')}
                 className={clsx(
@@ -299,11 +331,30 @@ export const Toolbar: React.FC = () => {
             </button>
 
             <button 
+              onClick={() => {
+                const blob = new Blob([currentContent], { type: 'text/markdown' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = currentFilePath ? currentFilePath.split('/').pop() || 'document.md' : 'document.md';
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              className="p-1.5 text-gray-400 hover:text-white hover:bg-dark-800 rounded transition-colors"
+              title="Download Markdown"
+            >
+              <Download size={18} />
+            </button>
+
+            <button 
               onClick={handleExportHTML}
               className="p-1.5 text-gray-400 hover:text-white hover:bg-dark-800 rounded transition-colors"
               title="Export HTML"
             >
-              <Download size={18} />
+              <div className="flex items-center">
+                <Download size={14} className="mr-1" />
+                <span className="text-[10px] font-bold">HTML</span>
+              </div>
             </button>
             
             <button 

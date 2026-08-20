@@ -4,7 +4,7 @@ import { X, Settings } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 
 export const SettingsModal: React.FC = () => {
-  const { isSettingsOpen, setSettingsOpen, customCss, setCustomCss, templateFolder, setTemplateFolder, isPageView, setIsPageView, pageWidth, setPageWidth } = useAppStore();
+  const { isSettingsOpen, setSettingsOpen, customCss, setCustomCss, templateFolder, setTemplateFolder } = useAppStore();
 
   if (!isSettingsOpen) return null;
 
@@ -35,37 +35,6 @@ export const SettingsModal: React.FC = () => {
               />
             </div>
             <p className="text-xs text-gray-500 mt-2">When creating a Daily Note, the app will look for a template at \{templateFolder}/Daily.md\.</p>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-2">Reading View</h3>
-            <div className="flex flex-col space-y-4">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  checked={isPageView} 
-                  onChange={(e) => setIsPageView(e.target.checked)}
-                  className="form-checkbox h-4 w-4 text-accent-pink rounded border-dark-600 bg-dark-900 focus:ring-accent-pink focus:ring-offset-dark-800"
-                />
-                <span className="text-sm text-gray-400">Enable Page View (MS Word style centered paper)</span>
-              </label>
-              
-              {isPageView && (
-                <div className="flex items-center gap-4 pl-7">
-                  <label className="text-sm text-gray-400 w-24">Page Width:</label>
-                  <input 
-                    type="range" 
-                    min="400" 
-                    max="1600" 
-                    step="50"
-                    value={pageWidth}
-                    onChange={(e) => setPageWidth(parseInt(e.target.value))}
-                    className="flex-1 max-w-xs accent-accent-pink"
-                  />
-                  <span className="text-sm text-gray-400 w-16">{pageWidth}px</span>
-                </div>
-              )}
-            </div>
           </div>
 
           <div className="flex-1 flex flex-col min-h-[300px]">

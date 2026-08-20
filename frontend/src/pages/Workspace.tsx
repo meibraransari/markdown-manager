@@ -105,6 +105,18 @@ export const Workspace: React.FC = () => {
         e.preventDefault();
         useAppStore.getState().setCommandPaletteOpen(true);
       }
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        const state = useAppStore.getState();
+        if (state.isDirty && state.currentFilePath && !isMedia(state.currentFilePath)) {
+          state.setSaving(true);
+          api.saveFile(state.currentFilePath, state.currentContent)
+            .then(() => state.markSaved())
+            .catch(err => console.error("Save failed", err))
+            .finally(() => state.setSaving(false));
+        }
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);

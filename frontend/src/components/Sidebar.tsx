@@ -1,14 +1,28 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../stores/appStore';
-import { Folder, File, ChevronRight, ChevronDown, FileText, Image as ImageIcon, Trash2, Edit3, Search, X, PanelLeftClose, PanelLeftOpen, Eye, EyeOff, ChevronsDown, ChevronsUp, Calendar, Settings, Upload } from 'lucide-react';
+import { Folder, File, ChevronRight, ChevronDown, FileText, Image as ImageIcon, Trash2, Edit3, Search, X, PanelLeftClose, PanelLeftOpen, Eye, EyeOff, ChevronsDown, ChevronsUp, Calendar, Settings, Upload, Download, FilePlus, FolderPlus } from 'lucide-react';
 import { OutlinePanel } from './OutlinePanel';
 import { TagsPanel } from './TagsPanel';
 import type { FileNode, SearchResult } from '../api/client';
 import { api } from '../api/client';
 import { clsx } from 'clsx';
 import { useNavigate } from 'react-router-dom';
+import { PromptDialog, AlertDialog, ImportDialog } from './Dialogs';
+import type { PromptConfig, AlertConfig, ImportConfig } from './Dialogs';
 
-const FileTreeItem: React.FC<{ node: FileNode; level: number; search: string; expandSignal: number; collapseSignal: number; onRequestDelete: (node: FileNode) => void }> = ({ node, level, search, expandSignal, collapseSignal, onRequestDelete }) => {
+type PromptRequest = (title: string, message: string, defaultValue?: string, placeholder?: string) => Promise<string | null>;
+type AlertRequest = (title: string, message: string, isError?: boolean) => void;
+
+const FileTreeItem: React.FC<{ 
+  node: FileNode; 
+  level: number; 
+  search: string; 
+  expandSignal: number; 
+  collapseSignal: number; 
+  onRequestDelete: (node: FileNode) => void;
+  onRequestPrompt: PromptRequest;
+  onRequestAlert: AlertRequest;
+}> = ({ node, level, search, expandSignal, collapseSignal, onRequestDelete, onRequestPrompt, onRequestAlert }) => {
   const [isOpen, setIsOpen] = useState(false);
   const currentFilePath = useAppStore(state => state.currentFilePath);
   const navigate = useNavigate();
@@ -42,6 +56,11 @@ const FileTreeItem: React.FC<{ node: FileNode; level: number; search: string; ex
     onRequestDelete(node);
   };
 
+  const handleDownload = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.location.href = api.getDownloadUrl(node.path);
+  };
+
   return (
     <div>
       <div 
@@ -70,12 +89,55 @@ const FileTreeItem: React.FC<{ node: FileNode; level: number; search: string; ex
         
         <span className="truncate flex-1">{node.name}</span>
 
-        {!isDir && (
-          <div className="hidden group-hover:flex items-center ml-2">
+        <div className="hidden group-hover:flex items-center ml-2">
+            {isDir && (
+              <>
+                <button 
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const name = await onRequestPrompt("New File", "Enter new file name:", "new-file.md", "e.g. notes.md");
+                    if (!name) return;
+                    try {
+                      const fullPath = node.path + '/' + name;
+                      await api.createItem(fullPath, false, "# " + name.replace('.md', ''));
+                      const tree = await api.getTree();
+                      useAppStore.getState().setFileTree(tree);
+                      setIsOpen(true);
+                    } catch (e) {
+                      onRequestAlert("Error", "Failed to create file", true);
+                    }
+                  }}
+                  className="p-1 text-gray-500 hover:text-accent-neon transition-colors"
+                  title="New File Here"
+                >
+                  <FilePlus size={14} />
+                </button>
+                <button 
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const name = await onRequestPrompt("New Folder", "Enter new folder name:", "New Folder", "e.g. projects");
+                    if (!name) return;
+                    try {
+                      const fullPath = node.path + '/' + name;
+                      await api.createItem(fullPath, true);
+                      const tree = await api.getTree();
+                      useAppStore.getState().setFileTree(tree);
+                      setIsOpen(true);
+                    } catch (e) {
+                      onRequestAlert("Error", "Failed to create folder", true);
+                    }
+                  }}
+                  className="p-1 text-gray-500 hover:text-accent-purple transition-colors"
+                  title="New Folder Here"
+                >
+                  <FolderPlus size={14} />
+                </button>
+              </>
+            )}
             <button 
               onClick={async (e) => {
                 e.stopPropagation();
-                const newName = window.prompt("Rename file:", node.name);
+                const newName = await onRequestPrompt(`Rename ${isDir ? 'folder' : 'file'}`, `Enter a new name for "${node.name}":`, node.name);
                 if (newName && newName !== node.name) {
                   try {
                     const newPath = node.path.substring(0, node.path.lastIndexOf('/') + 1) + newName;
@@ -86,24 +148,30 @@ const FileTreeItem: React.FC<{ node: FileNode; level: number; search: string; ex
                       navigate(`/${newPath.split('/').map(encodeURIComponent).join('/')}`);
                     }
                   } catch (e: any) {
-                    alert("Failed to rename item");
+                    onRequestAlert("Error", `Failed to rename ${isDir ? 'folder' : 'file'}`, true);
                   }
                 }
               }}
               className="p-1 text-gray-500 hover:text-accent-neon transition-colors"
-              title="Rename File"
+              title={isDir ? "Rename Folder" : "Rename File"}
             >
               <Edit3 size={14} />
             </button>
             <button 
+              onClick={handleDownload}
+              className="p-1 text-gray-500 hover:text-accent-blue transition-colors"
+              title={isDir ? "Download Folder as ZIP" : "Download File"}
+            >
+              <Download size={14} />
+            </button>
+            <button 
               onClick={handleDelete}
               className="p-1 text-gray-500 hover:text-red-400 transition-colors"
-              title="Delete File"
+              title={isDir ? "Delete Folder" : "Delete File"}
             >
               <Trash2 size={14} />
             </button>
           </div>
-        )}
       </div>
 
       {isDir && effectivelyOpen && node.children && (
@@ -117,6 +185,8 @@ const FileTreeItem: React.FC<{ node: FileNode; level: number; search: string; ex
               expandSignal={expandSignal} 
               collapseSignal={collapseSignal} 
               onRequestDelete={onRequestDelete}
+              onRequestPrompt={onRequestPrompt}
+              onRequestAlert={onRequestAlert}
             />))}
         </div>
       )}
@@ -135,23 +205,67 @@ export const Sidebar: React.FC = () => {
   const [collapseSignal, setCollapseSignal] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [nodeToDelete, setNodeToDelete] = useState<FileNode | null>(null);
+  
+  const [promptConfig, setPromptConfig] = useState<PromptConfig | null>(null);
+  const [alertConfig, setAlertConfig] = useState<AlertConfig | null>(null);
+  const [importConfig, setImportConfig] = useState<ImportConfig | null>(null);
+
+  const requestPrompt: PromptRequest = (title, message, defaultValue = '', placeholder = '') => {
+    return new Promise((resolve) => {
+      setPromptConfig({
+        title,
+        message,
+        defaultValue,
+        placeholder,
+        onConfirm: (val) => {
+          setPromptConfig(null);
+          resolve(val);
+        },
+        onCancel: () => {
+          setPromptConfig(null);
+          resolve(null);
+        }
+      });
+    });
+  };
+
+  const requestAlert: AlertRequest = (title, message, isError = false) => {
+    setAlertConfig({
+      title,
+      message,
+      isError,
+      onClose: () => setAlertConfig(null)
+    });
+  };
+
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const folderInputRef = React.useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    
     try {
-      await api.uploadFile(file);
+      if (files.length === 1 && !files[0].webkitRelativePath) {
+        await api.uploadFile(files[0]);
+      } else {
+        // Folder upload or multiple file upload
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const relativePath = file.webkitRelativePath || file.name;
+          await api.uploadFile(file, relativePath);
+        }
+      }
       const tree = await api.getTree(showHiddenFiles);
       setFileTree(tree);
     } catch (e) {
       console.error(e);
-      alert("Failed to upload file.");
+      requestAlert("Upload Failed", "Failed to upload your files.", true);
     }
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (folderInputRef.current) folderInputRef.current.value = '';
   };
 
   const handleDrop = async (e: React.DragEvent) => {
@@ -168,7 +282,7 @@ export const Sidebar: React.FC = () => {
       setFileTree(tree);
     } catch (error) {
       console.error('Failed to upload files:', error);
-      alert('Failed to upload files.');
+      requestAlert("Upload Failed", "Failed to upload files.", true);
     }
   };
 
@@ -178,7 +292,7 @@ export const Sidebar: React.FC = () => {
       navigate(`/${path.split('/').map(encodeURIComponent).join('/')}`);
     } catch (e) {
       console.error(e);
-      alert("Failed to create daily note.");
+      requestAlert("Error", "Failed to create daily note.", true);
     }
   };
 
@@ -205,7 +319,7 @@ export const Sidebar: React.FC = () => {
       setSearchResults(results);
     } catch (e) {
       console.error(e);
-      alert("Search failed");
+      requestAlert("Search Error", "Search failed.", true);
     } finally {
       setIsSearching(false);
     }
@@ -221,24 +335,24 @@ export const Sidebar: React.FC = () => {
   };
 
   const handleCreateFile = async () => {
-    const name = window.prompt("Enter new file name (e.g. notes.md):");
+    const name = await requestPrompt("New File", "Enter new file name:", "new-file.md", "e.g. notes.md");
     if (!name) return;
     try {
       await api.createItem(name, false, "# " + name.replace('.md', ''));
       refreshTree();
     } catch (e: any) {
-      alert(e.response?.data?.detail || "Failed to create file");
+      requestAlert("Error", e.response?.data?.detail || "Failed to create file", true);
     }
   };
 
   const handleCreateFolder = async () => {
-    const name = window.prompt("Enter new folder name:");
+    const name = await requestPrompt("New Folder", "Enter new folder name:", "New Folder", "e.g. projects");
     if (!name) return;
     try {
       await api.createItem(name, true);
       refreshTree();
     } catch (e: any) {
-      alert(e.response?.data?.detail || "Failed to create folder");
+      requestAlert("Error", e.response?.data?.detail || "Failed to create folder", true);
     }
   };
 
@@ -272,12 +386,16 @@ export const Sidebar: React.FC = () => {
       }
       setNodeToDelete(null);
     } catch (e: any) {
-      alert("Failed to delete item");
+      requestAlert("Error", "Failed to delete item", true);
     }
   };
 
   return (
     <>
+      <PromptDialog config={promptConfig} />
+      <AlertDialog config={alertConfig} />
+      <ImportDialog config={importConfig} />
+      
       {nodeToDelete && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-dark-800 border border-dark-600 rounded-lg shadow-xl p-6 max-w-sm w-full mx-4 animate-in zoom-in-95 duration-200">
@@ -336,12 +454,6 @@ export const Sidebar: React.FC = () => {
             >
               {showHiddenFiles ? <Eye size={16} /> : <EyeOff size={16} />}
             </button>
-            <button onClick={handleCreateFile} className="flex-1 flex justify-center py-1.5 text-gray-400 hover:text-accent-neon bg-dark-900 hover:bg-dark-700 rounded transition-colors" title="New File">
-              <FileText size={16} />
-            </button>
-            <button onClick={handleCreateFolder} className="flex-1 flex justify-center py-1.5 text-gray-400 hover:text-accent-purple bg-dark-900 hover:bg-dark-700 rounded transition-colors" title="New Folder">
-              <Folder size={16} />
-            </button>
             <button onClick={handleDailyNote} className="flex-1 flex justify-center py-1.5 text-gray-400 hover:text-accent-pink bg-dark-900 hover:bg-dark-700 rounded transition-colors" title="Today's Daily Note">
               <Calendar size={16} />
             </button>
@@ -350,10 +462,28 @@ export const Sidebar: React.FC = () => {
             </button>
           </div>
           <div className="flex items-center space-x-1 mt-2">
-            <button onClick={() => fileInputRef.current?.click()} className="flex-1 flex justify-center py-1.5 text-gray-400 hover:text-accent-neon bg-dark-900 hover:bg-dark-700 rounded transition-colors" title="Import File">
+            <button onClick={handleCreateFile} className="flex-1 flex justify-center py-1.5 text-gray-400 hover:text-accent-neon bg-dark-900 hover:bg-dark-700 rounded transition-colors" title="New File">
+              <FilePlus size={16} />
+            </button>
+            <button onClick={handleCreateFolder} className="flex-1 flex justify-center py-1.5 text-gray-400 hover:text-accent-purple bg-dark-900 hover:bg-dark-700 rounded transition-colors" title="New Folder">
+              <FolderPlus size={16} />
+            </button>
+            
+            <button 
+              onClick={() => setImportConfig({
+                isOpen: true,
+                onClose: () => setImportConfig(null),
+                onImportFile: () => fileInputRef.current?.click(),
+                onImportFolder: () => folderInputRef.current?.click()
+              })} 
+              className="flex-1 flex justify-center py-1.5 text-gray-400 hover:text-accent-blue bg-dark-900 hover:bg-dark-700 rounded transition-colors" 
+              title="Import Files/Folders"
+            >
               <Upload size={16} />
             </button>
-            <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileUpload} />
+            <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileUpload} multiple />
+            <input type="file" ref={folderInputRef} className="hidden" onChange={handleFileUpload} {...{webkitdirectory: "", directory: ""} as any} />
+
             <button 
               onClick={() => setExpandSignal(s => s + 1)} 
               className="flex-1 flex justify-center py-1.5 text-gray-400 hover:text-white bg-dark-900 hover:bg-dark-700 rounded transition-colors" 
@@ -415,6 +545,8 @@ export const Sidebar: React.FC = () => {
                 expandSignal={expandSignal}
                 collapseSignal={collapseSignal}
                 onRequestDelete={(node) => setNodeToDelete(node)}
+                onRequestPrompt={requestPrompt}
+                onRequestAlert={requestAlert}
               />
             ))
             ) : (

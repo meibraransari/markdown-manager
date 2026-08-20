@@ -66,9 +66,15 @@ export const api = {
     });
     return response.data.path;
   },
-  uploadFile: async (file: File): Promise<string> => {
+  getDownloadUrl: (path: string): string => {
+    return `${API_BASE_URL}/download/${encodeURIComponent(path)}`;
+  },
+  uploadFile: async (file: File, relativePath?: string): Promise<string> => {
     const formData = new FormData();
     formData.append('file', file);
+    if (relativePath) {
+      formData.append('relativePath', relativePath);
+    }
     const response = await apiClient.post('/import', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'

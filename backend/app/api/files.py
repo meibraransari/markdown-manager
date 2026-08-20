@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException, Path, File, UploadFile
-from typing import List
+from fastapi import APIRouter, HTTPException, Path, File, UploadFile, Form
+from fastapi.responses import FileResponse, StreamingResponse
+from typing import List, Optional
 from app.services.filesystem import fs_service
 from app.models.schemas import (
     FileNode, 
@@ -10,6 +11,9 @@ from app.models.schemas import (
 )
 import urllib.parse
 from datetime import datetime
+import io
+import zipfile
+import os
 
 router = APIRouter()
 
@@ -76,12 +80,36 @@ async def upload_file(file: UploadFile = File(...)):
     return {"path": path}
 
 @router.post("/import")
-async def import_file(file: UploadFile = File(...)):
+async def import_file(file: UploadFile = File(...), relativePath: Optional[str] = Form(None)):
     if not file.filename:
         raise HTTPException(status_code=400, detail="No filename provided")
     file_bytes = await file.read()
-    path = await fs_service.import_file(file.filename, file_bytes)
+    path = await fs_service.import_file(file.filename, file_bytes, relativePath)
     return {"path": path}
+
+@router.get("/download/{path:path}")
+def download_item(path: str = Path(...)):
+    decoded_path = urllib.parse.unquote(path)
+    file_path = fs_service.root / decoded_path.strip("/")
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Not found")
+        
+    if file_path.is_file():
+        return FileResponse(file_path, filename=file_path.name)
+    else:
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            for root, _, files in os.walk(file_path):
+                for file in files:
+                    full_path = os.path.join(root, file)
+                    rel_path = os.path.relpath(full_path, file_path)
+                    zip_file.write(full_path, rel_path)
+        zip_buffer.seek(0)
+        return StreamingResponse(
+            zip_buffer, 
+            media_type="application/x-zip-compressed", 
+            headers={"Content-Disposition": f"attachment; filename={file_path.name}.zip"}
+        )
 
 @router.delete("/files/{path:path}")
 def delete_item(path: str = Path(...)):
