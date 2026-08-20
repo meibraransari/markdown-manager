@@ -1,5 +1,5 @@
 # Stage 1: Build the frontend
-FROM node:20-alpine as frontend-builder
+FROM node:20-alpine AS frontend-builder
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json* ./
 # We will use npm install since it's standard, but if we don't have package-lock we use npm i
