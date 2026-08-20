@@ -114,6 +114,26 @@ export const MarkdownEditor: React.FC = () => {
   const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
 
+    const domNode = editor.getDomNode();
+    if (domNode) {
+      domNode.addEventListener('paste', (e: ClipboardEvent) => {
+        const items = e.clipboardData?.items;
+        if (items) {
+          for (let i = 0; i < items.length; i++) {
+            if (items[i].type.startsWith('image/')) {
+              e.preventDefault();
+              e.stopPropagation();
+              const file = items[i].getAsFile();
+              if (file) {
+                uploadAndInsertImage(file);
+              }
+              break;
+            }
+          }
+        }
+      }, true);
+    }
+
     // Register Slash Command Completion
     monaco.languages.registerCompletionItemProvider('markdown', {
       triggerCharacters: ['/'],

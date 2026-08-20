@@ -9,6 +9,27 @@ export const apiClient = axios.create({
   },
 });
 
+export interface CommitInfo {
+  id: string;
+  message: string;
+  author: string;
+  date: string;
+}
+
+export interface TaskItem {
+  path: string;
+  line_number: number;
+  text: string;
+  completed: boolean;
+  context?: string;
+}
+
+export interface BacklinkItem {
+  source_path: string;
+  line_number: number;
+  context: string;
+}
+
 export interface FileNode {
   name: string;
   path: string;
@@ -94,10 +115,17 @@ export const api = {
     const response = await apiClient.get('/metadata/tags');
     return response.data;
   },
-  getBacklinks: async (path: string): Promise<string[]> => {
-    const encoded = encodeURIComponent(path);
-    const response = await apiClient.get(`/metadata/backlinks/${encoded}`);
-    return response.data.backlinks;
+  getTasks: async (): Promise<TaskItem[]> => {
+    const response = await apiClient.get<TaskItem[]>('/tasks');
+    return response.data;
+  },
+  toggleTask: async (path: string, line_number: number, completed: boolean): Promise<any> => {
+    const response = await apiClient.post('/tasks/toggle', { path, line_number, completed });
+    return response.data;
+  },
+  getBacklinks: async (targetPath: string): Promise<BacklinkItem[]> => {
+    const response = await apiClient.get<BacklinkItem[]>('/backlinks', { params: { target_path: targetPath } });
+    return response.data;
   },
   getGitStatus: async (): Promise<string> => {
     const response = await apiClient.get('/git/status');
@@ -114,9 +142,5 @@ export const api = {
   createDailyNote: async (templateFolder: string): Promise<string> => {
     const response = await apiClient.post('/daily', { templateFolder });
     return response.data.path;
-  },
-  getTasks: async (): Promise<any[]> => {
-    const response = await apiClient.get('/metadata/tasks');
-    return response.data;
   }
 };

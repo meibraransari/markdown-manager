@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../stores/appStore';
-import { Folder, File, ChevronRight, ChevronDown, FileText, Image as ImageIcon, Trash2, Edit3, Search, X, PanelLeftClose, PanelLeftOpen, Eye, EyeOff, ChevronsDown, ChevronsUp, Calendar, Settings, Upload, Download, FilePlus, FolderPlus } from 'lucide-react';
+import { Folder, File, ChevronRight, ChevronDown, FileText, Image as ImageIcon, Trash2, Edit3, Search, X, PanelLeftClose, PanelLeftOpen, Eye, EyeOff, ChevronsDown, ChevronsUp, Calendar, Settings, Upload, Download, FilePlus, FolderPlus, RefreshCw } from 'lucide-react';
 import { OutlinePanel } from './OutlinePanel';
 import { TagsPanel } from './TagsPanel';
+import { TasksPanel } from './TasksPanel';
 import type { FileNode, SearchResult } from '../api/client';
 import { api } from '../api/client';
 import { clsx } from 'clsx';
@@ -441,6 +442,13 @@ export const Sidebar: React.FC = () => {
             </button>
           </div>
           <div className="flex items-center space-x-1">
+            <button 
+              onClick={refreshTree} 
+              className="flex-1 flex justify-center py-1.5 text-gray-400 hover:text-accent-blue bg-dark-900 hover:bg-dark-700 rounded transition-colors" 
+              title="Refresh File Tree"
+            >
+              <RefreshCw size={16} />
+            </button>
             <button onClick={() => setSearchOpen(true)} className="flex-1 flex justify-center py-1.5 text-gray-400 hover:text-white bg-dark-900 hover:bg-dark-700 rounded transition-colors" title="Global Search">
               <Search size={16} />
             </button>
@@ -553,9 +561,10 @@ export const Sidebar: React.FC = () => {
               <div className="text-center text-sm text-gray-500 mt-4">No files match "{search}"</div>
             )}
         </div>
+        <TasksPanel />
         <TagsPanel />
-          <OutlinePanel />
-        </div>
+        <OutlinePanel />
+      </div>
 
       {isSearchOpen && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center pt-24" onClick={() => setSearchOpen(false)}>

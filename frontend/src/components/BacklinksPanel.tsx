@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 
 export const BacklinksPanel: React.FC = () => {
   const { currentFilePath } = useAppStore();
-  const [backlinks, setBacklinks] = useState<string[]>([]);
+  const [backlinks, setBacklinks] = useState<any[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,13 +31,16 @@ export const BacklinksPanel: React.FC = () => {
         Linked Mentions
       </h3>
       <div className="space-y-2">
-        {backlinks.map(path => (
+        {backlinks.map(link => (
           <div 
-            key={path}
-            onClick={() => navigate(`/${path.split('/').map(encodeURIComponent).join('/')}`)}
+            key={`${link.source_path}-${link.line_number}`}
+            onClick={() => navigate(`/${link.source_path.split('/').map(encodeURIComponent).join('/')}?line=${link.line_number}`)}
             className="p-3 bg-dark-800 rounded border border-dark-700 hover:border-accent-neon cursor-pointer transition-colors"
           >
-            <span className="text-accent-neon text-sm">{path}</span>
+            <div className="text-accent-neon text-sm font-medium mb-1">{link.source_path}</div>
+            <div className="text-gray-400 text-xs truncate font-mono">
+              {link.context}
+            </div>
           </div>
         ))}
       </div>
