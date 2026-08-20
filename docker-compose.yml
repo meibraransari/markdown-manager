@@ -1,6 +1,8 @@
 services:
   markdown-manager:
     build: .
+    container_name: markdown-manager
+    image: ibraransaridocker/markdown-manager
     ports:
       - "${PORT:-8000}:8000"
     volumes:
