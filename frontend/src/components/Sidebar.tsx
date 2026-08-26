@@ -201,6 +201,7 @@ export const Sidebar: React.FC = () => {
   const { isSidebarOpen, toggleSidebar, isSearchOpen, setSearchOpen, showHiddenFiles, toggleHiddenFiles, searchQuery: globalSearchQuery, setSearchQuery: setGlobalSearchQuery, setSettingsOpen, templateFolder } = useAppStore();
   const [search, setSearch] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<{current: number, total: number} | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [expandSignal, setExpandSignal] = useState(0);
   const [collapseSignal, setCollapseSignal] = useState(0);
@@ -272,18 +273,71 @@ export const Sidebar: React.FC = () => {
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length === 0) return;
+    
+    const items = e.dataTransfer.items;
+    if (!items || items.length === 0) return;
     
     try {
-      for (const file of files) {
-        await api.uploadFile(file);
+      const getFilesFromEntry = async (entry: any, path = ''): Promise<{file: File, path: string}[]> => {
+        if (entry.isFile) {
+          return new Promise((resolve) => {
+            entry.file((file: File) => resolve([{ file, path: path + file.name }]));
+          });
+        } else if (entry.isDirectory) {
+          const dirReader = entry.createReader();
+          return new Promise((resolve) => {
+            const readAllEntries = async (reader: any, allEntries: any[] = []): Promise<any[]> => {
+              return new Promise((res) => {
+                reader.readEntries(async (entries: any[]) => {
+                  if (entries.length === 0) {
+                    res(allEntries);
+                  } else {
+                    res(await readAllEntries(reader, allEntries.concat(entries)));
+                  }
+                });
+              });
+            };
+            
+            readAllEntries(dirReader).then(async (entries) => {
+              const promises = entries.map(e => getFilesFromEntry(e, path + entry.name + '/'));
+              const results = await Promise.all(promises);
+              resolve(results.flat());
+            });
+          });
+        }
+        return [];
+      };
+
+      const entries: any[] = [];
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.kind === 'file') {
+          const entry = item.webkitGetAsEntry();
+          if (entry) entries.push(entry);
+        }
       }
+
+      const allFilesList = await Promise.all(entries.map(e => getFilesFromEntry(e)));
+      const allFiles = allFilesList.flat();
+
+      if (allFiles.length === 0) return;
+      
+      setUploadProgress({ current: 0, total: allFiles.length });
+
+      let current = 0;
+      for (const { file, path } of allFiles) {
+        await api.uploadFile(file, path);
+        current++;
+        setUploadProgress({ current, total: allFiles.length });
+      }
+      
       const tree = await api.getTree(showHiddenFiles);
       setFileTree(tree);
     } catch (error) {
       console.error('Failed to upload files:', error);
       requestAlert("Upload Failed", "Failed to upload files.", true);
+    } finally {
+      setUploadProgress(null);
     }
   };
 
@@ -561,6 +615,25 @@ export const Sidebar: React.FC = () => {
               <div className="text-center text-sm text-gray-500 mt-4">No files match "{search}"</div>
             )}
         </div>
+        
+        {uploadProgress && (
+          <div className="p-4 m-2 bg-dark-900 border border-accent-purple/30 rounded-lg shrink-0 animate-in fade-in slide-in-from-bottom-2">
+            <div className="flex items-center justify-between text-xs text-gray-300 font-medium mb-2">
+              <span className="flex items-center gap-1.5 text-accent-purple">
+                <Upload size={14} className="animate-pulse" />
+                Uploading...
+              </span>
+              <span>{uploadProgress.current} / {uploadProgress.total}</span>
+            </div>
+            <div className="w-full bg-dark-700 rounded-full h-1.5 overflow-hidden">
+              <div 
+                className="bg-accent-purple h-full transition-all duration-200" 
+                style={{ width: `${Math.max(5, (uploadProgress.current / uploadProgress.total) * 100)}%` }} 
+              />
+            </div>
+          </div>
+        )}
+
         <TasksPanel />
         <TagsPanel />
         <OutlinePanel />

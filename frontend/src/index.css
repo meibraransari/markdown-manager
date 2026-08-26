@@ -271,3 +271,18 @@
   pointer-events: none !important;
   z-index: 50 !important;
 }
+@media print {
+  .mermaid-dark { display: none !important; }
+  .mermaid-light {
+    display: flex !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .mermaid-light * {
+    color: black !important;
+  }
+}
+@media screen {
+  .mermaid-light { display: none !important; }
+}

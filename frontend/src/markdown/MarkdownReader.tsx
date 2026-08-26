@@ -50,28 +50,42 @@ const CodeBlockWrapper: React.FC<{ children: React.ReactNode, className?: string
 };
 
 const MermaidChart: React.FC<{ chart: string }> = ({ chart }) => {
-  const [svg, setSvg] = React.useState<string>('');
+  const [darkSvg, setDarkSvg] = React.useState<string>('');
+  const [lightSvg, setLightSvg] = React.useState<string>('');
 
   useEffect(() => {
     const renderChart = async () => {
       try {
-        mermaid.initialize({
-          startOnLoad: false,
-          theme: 'dark',
-          securityLevel: 'loose',
-        });
-        const id = 'mermaid-' + Math.random().toString(36).substr(2, 9);
-        const { svg: svgCode } = await mermaid.render(id, chart);
-        setSvg(svgCode);
+        // Dark theme for screen
+        mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
+        const id1 = 'mermaid-dark-' + Math.random().toString(36).substr(2, 9);
+        const { svg: svgCodeDark } = await mermaid.render(id1, chart);
+        setDarkSvg(svgCodeDark);
+
+        // Light theme for print
+        mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose' });
+        const id2 = 'mermaid-light-' + Math.random().toString(36).substr(2, 9);
+        const { svg: svgCodeLight } = await mermaid.render(id2, chart);
+        setLightSvg(svgCodeLight);
+        
+        // Restore dark for safety
+        mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
       } catch (e) {
         console.error('Mermaid rendering failed', e);
-        setSvg(`<div class="text-red-400 border border-red-500/20 p-4 rounded bg-red-500/10 text-sm font-mono whitespace-pre overflow-x-auto">${chart}</div>`);
+        const errorHtml = `<div class="text-red-400 border border-red-500/20 p-4 rounded bg-red-500/10 text-sm font-mono whitespace-pre overflow-x-auto">${chart}</div>`;
+        setDarkSvg(errorHtml);
+        setLightSvg(errorHtml);
       }
     };
     renderChart();
   }, [chart]);
 
-  return <div dangerouslySetInnerHTML={{ __html: svg }} className="flex justify-center py-4 w-full overflow-x-auto" />;
+  return (
+    <>
+      <div dangerouslySetInnerHTML={{ __html: darkSvg }} className="mermaid-dark flex justify-center py-4 w-full overflow-x-auto" />
+      <div dangerouslySetInnerHTML={{ __html: lightSvg }} className="mermaid-light flex justify-center py-4 w-full overflow-visible [&>svg]:max-w-full [&>svg]:h-auto" />
+    </>
+  );
 };
 
 export const MarkdownReader: React.FC<Props> = ({ content }) => {
@@ -145,16 +159,41 @@ export const MarkdownReader: React.FC<Props> = ({ content }) => {
             
             return <CodeBlockWrapper {...props}>{children}</CodeBlockWrapper>;
           },
+          img: ({ src, alt, title, ...props }) => {
+            if (!src) return <img alt={alt} title={title} {...props} />;
+            let finalSrc = src;
+            if (!src.startsWith('http') && !src.startsWith('data:') && !src.startsWith('/')) {
+              const currentFilePath = useAppStore.getState().currentFilePath;
+              const basePath = currentFilePath ? currentFilePath.split('/').slice(0, -1).join('/') : '';
+              const fakeBase = new URL(`http://localhost/raw/${basePath}${basePath ? '/' : ''}`);
+              const resolvedUrl = new URL(src, fakeBase);
+              finalSrc = resolvedUrl.pathname + resolvedUrl.search + resolvedUrl.hash;
+            }
+            return <img src={finalSrc} alt={alt} title={title} className="max-w-full h-auto rounded shadow-sm" {...props} />;
+          },
           a: ({ node, href, children, ...props }) => {
             return (
               <a 
                 href={href} 
+                className="text-accent-blue hover:underline cursor-pointer"
                 onClick={(e) => {
-                  if (href && !href.startsWith('http') && !href.startsWith('#')) {
-                    e.preventDefault();
-                    navigate(`/${href.split('/').map(encodeURIComponent).join('/')}`);
+                  if (!href) return;
+                  if (href.startsWith('#')) return;
+                  
+                  try {
+                    const url = new URL(href, window.location.href);
+                    if (url.origin === window.location.origin) {
+                      e.preventDefault();
+                      const decodedPath = decodeURIComponent(url.pathname);
+                      const encodedPath = decodedPath.split('/').map(segment => encodeURIComponent(segment)).join('/');
+                      navigate(encodedPath + url.search + url.hash);
+                    }
+                  } catch(err) {
+                    // Fallback to default
                   }
                 }}
+                target={href && href.startsWith('http') && !href.startsWith(window.location.origin) ? "_blank" : undefined}
+                rel={href && href.startsWith('http') && !href.startsWith(window.location.origin) ? "noopener noreferrer" : undefined}
                 {...props}
               >
                 {children}
