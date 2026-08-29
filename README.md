@@ -1,93 +1,132 @@
-# Markdown Manager
+# 📝 Markdown Manager
 
-A production-quality, deeply integrated, locally-hosted Markdown Knowledge Base and Editor. Inspired by tools like Obsidian and Notion, Markdown Manager provides a raw, professional Markdown editing experience (powered by Monaco Editor) mixed with advanced visualization, templating, and native Git support—all operating directly on your local file system.
+<div align="center">
+ 
+**A production-quality, deeply integrated, locally-hosted Markdown Knowledge Base and Editor**  
+_Your files, your data. Beautiful Obsidian-like features, entirely offline._
 
-[![GitHub Repo stars](https://img.shields.io/github/stars/meibraransari/markdown-manager?style=social)](https://github.com/meibraransari/markdown-manager)
+[![GitHub Repository](https://img.shields.io/badge/GitHub-markdown--manager-blue?style=for-the-badge&logo=github)](https://github.com/meibraransari/markdown-manager)
 
-## 🚀 Key Features
+</div>
 
-### Advanced Editing & Viewing
-- **Two Modes**: Seamlessly toggle between "Edit Mode" (raw text Monaco editor) and "Read Mode" (beautiful Git-style markdown preview).
-- **Clipboard Image Paste**: Native `Ctrl+V` interception in the editor instantly uploads pasted images and inserts the markdown tag (`![img](path)`).
-- **Vim Keybindings**: Built-in, toggleable Vim mode for power users.
-- **Math & LaTeX Support**: Full KaTeX integration to render inline (`$math$`) and block (`$$math$$`) math equations.
-- **Rich Media Viewing**: Native support for viewing images (`.png`, `.jpg`, etc.) and `.pdf` files directly in the workspace tabs.
-- **Slash Commands (`/`)**: Type `/` in the editor to quickly insert tables, codeblocks, LaTeX blocks, mermaid diagrams, quotes, and task checkboxes.
-- **Enhanced Read Mode**: Features a "Page View" width slider directly in the toolbar for distraction-free reading, and one-click "Copy" buttons on all codeblocks.
+---
 
-### Organization & Intelligence
-- **Graph View**: Interactive, force-directed network graph visualizing all your files and how they connect to each other via wikilinks.
-- **Tags & Backlinks**:
-  - Automatically parses `#tags` into a dynamic Sidebar panel.
-  - "Linked Mentions" appear at the bottom of notes, showing which other files link to the current one.
-- **Wikilinks**: Full support for Obsidian-style `[[File Name]]` inter-note linking.
-- **Global Task Manager**: 
-  - Aggregates all markdown tasks (`- [ ]`) across your entire workspace.
-  - Features a collapsible **Tasks Panel** in the sidebar to jump to tasks.
-  - Includes a professional, draggable **Task Dashboard** modal that lets you drag tasks from "To Do" to "Done", automatically updating the physical markdown files.
+## 📸 Screenshots
 
-### Productivity & Workflow
-- **Advanced File Management**: 
-  - Professional, beautifully styled modal dialogs (no more native browser prompts).
-  - Full support for uploading, renaming, deleting, and downloading entire **folders** and files.
-  - Contextual hover actions in the sidebar to create files/folders directly inside specific directories.
-  - A dedicated "Refresh File Tree" button in the sidebar header.
-- **Daily Notes & Templating**: Generate daily journal entries instantly. Configure a template folder (e.g. `Templates/Daily.md`) to automatically scaffold new notes.
-- **Properties Panel**: Parses YAML frontmatter (`---`) and presents it as a clean, interactive metadata UI at the top of the file.
-- **Multi-File Tabs**: Open multiple files concurrently in a tabbed interface.
-- **Command Palette**: Press `Ctrl+P` (or `Cmd+P`) to quickly fuzzy-search and jump between files.
-- **Outline / TOC**: Sidebar panel displaying a dynamically generated Table of Contents for the active file.
-- **Import & Upload**: Consolidated drag-and-drop modal to import files and folders directly into your workspace.
+| | | |
+|---|---|---|
+| ![Markdown Editor](assets/editor_toolbar.png) | ![Enhanced Read Mode](assets/read_mode_page_view.png) | ![Task Dashboard](assets/task_dashboard.png) |
+| ![Daily Notes](assets/daily_notes_view.png) | ![Theme Selection](assets/theme_selection.png) | ![Outline Navigation](assets/outline_navigation.png) |
 
-### Customization & Export
-- **10+ Pro Themes**: Built-in color themes including Light, Dark, Obsidian, Dracula, Nord, Monokai, GitHub Dark, Solarized, Gruvbox, and One Dark.
-- **Custom CSS Snippets**: Inject your own CSS variables and styles globally via the Settings menu.
-- **HTML Export**: Single-click "Download" to export the current rendered preview as a standalone, styled HTML file.
+---
 
-### System & Infrastructure
-- **Native Git Integration**: Floating GUI panel for version control—commit your changes and view commit history directly from the browser.
-- **Filesystem Driven**: Operates directly on a mounted local directory. No database required, completely local, and fully private.
-- **Safe & Secure**: Built-in path traversal protection.
+## 🚀 Quick Start
 
-## Requirements
-- Docker and Docker Compose (recommended)
-- Python 3.12+ (if running backend manually)
-- Node.js 20+ (if running frontend manually)
+Get **Markdown Manager** running locally in just a few commands:
 
-## Quick Start
-Using Docker Compose:
 ```bash
+# 1. Clone the repo
 git clone https://github.com/meibraransari/markdown-manager.git
 cd markdown-manager
+
+# 2. Start all services
 docker compose up --build -d
 ```
-Open `http://localhost:8000` in your browser.
 
-## Mounting a Directory
-In `docker-compose.yml`, modify the volume mount to point to your desired markdown documents directory:
+Once running, open your browser and navigate to **`http://localhost:8000`** to access the application.
+
+---
+
+## 🐳 Docker Setup
+
+### Local Commands
+
+```bash
+# Start all services in background
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Stop everything
+docker compose down
+
+# Rebuild after code changes
+docker compose up -d --build
+```
+
+### Mounting a Directory
+
+By default, Markdown Manager operates on a mounted directory. In `docker-compose.yml`, modify the volume mount to point to your local markdown documents folder:
+
 ```yaml
 volumes:
   - ./my-documents:/workspace
 ```
 
-## Configuration
-- `MARKDOWN_ROOT`: The absolute or relative path to the directory serving as the root. Default is `/workspace` (inside Docker).
-- `PORT`: Port the application listening port.
-- `LOG_LEVEL`: Application logging level (`info`, `debug`).
+---
 
-## Development
-To run backend and frontend separately for development:
+## 📚 Features Guide
 
-1. **Backend**:
-   ```bash
-   cd backend
-   pip install -r requirements.txt
-   uvicorn app.main:app --reload
-   ```
+For a comprehensive overview of the available features and capabilities, please refer to the [features.md](features.md) document. 
 
-2. **Frontend**:
-   ```bash
-   cd frontend
-   npm install
-   npm run dev
-   ```
+Key features include:
+* 🔄 **Dual Modes**: Edit mode with Monaco Editor and live Read mode.
+* 📸 **Clipboard Image Paste**: Direct pasting of images into Markdown.
+* ⌨️ **Vim Keybindings**: Full keyboard-centric editor support.
+* 🕸️ **Interactive Graph View**: Visual mapping of wikilinks and connections.
+* 📋 **Global Task Manager**: Drag-and-drop Kanban dashboard linked to notes.
+* 🎭 **10+ Pro Themes**: One-click styling including Dracula, Nord, Obsidian.
+
+---
+
+## ⚙️ Environment Variables
+
+Customize the application's runtime configuration using the following environment variables:
+
+| Variable | Default | Required | Description |
+|---|---|---|---|
+| `MARKDOWN_ROOT` | `/workspace` | No | Absolute or relative path to the directory serving as the root |
+| `PORT` | `8000` | No | External listening port for the application |
+| `LOG_LEVEL` | `info` | No | Application logging level (`info`, `debug`) |
+
+---
+
+## 🛠️ Manual Development Setup
+
+If you prefer to run the backend and frontend separately for development, follow these setup guides:
+
+### 1. Backend Setup
+
+The backend is built with FastAPI.
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+### 2. Frontend Setup
+
+The frontend is built with React and Vite.
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please follow these steps:
+1. Fork the Repository.
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`).
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`).
+4. Push to the Branch (`git push origin feature/AmazingFeature`).
+5. Open a Pull Request.
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
