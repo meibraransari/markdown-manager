@@ -29,7 +29,10 @@ Get **Markdown Manager** running locally in just a few commands:
 git clone https://github.com/meibraransari/markdown-manager.git
 cd markdown-manager
 
-# 2. Start all services
+# 2. Start Markdown Server
+docker compose up -d
+
+# 3. Start  Markdown Server (Build from code)
 docker compose up --build -d
 ```
 
