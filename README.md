@@ -32,7 +32,9 @@ cd markdown-manager
 # 2. Start Markdown Server
 docker compose up -d
 
-# 3. Start  Markdown Server (Build from code)
+# or
+
+# 2. Start  Markdown Server (Build from code)
 docker compose up --build -d
 ```
 
